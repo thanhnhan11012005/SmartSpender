@@ -1,0 +1,79 @@
+spring:
+  application:
+    name: SmartSpender
+  profiles:
+    active: dev
+  
+  security:
+    user:
+      name: dev
+      password: devpass
+      roles: ADMIN
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/SmartSpender
+    username: postgres
+    password: 1101
+    driver-class-name: org.postgresql.Driver
+  
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+  
+  jackson:
+    default-property-inclusion: non_null
+    serialization:
+      write-dates-as-timestamps: false
+    time-zone: UTC
+
+  # ===== Vertex AI Configuration (NEW - Replaces old Gemini API) =====
+  # Uses Application Default Credentials from C:\Users\{user}\.config\gcloud\application_default_credentials.json
+  ai:
+    google:
+      vertexai:
+        # Project ID will be auto-detected from Application Default Credentials
+        # Or you can explicitly set it here:
+        # project-id: your-gcp-project-id
+        # Location for Vertex AI models (e.g., us-central1, asia-southeast1)
+        location: us-central1
+        # Model name configuration
+        generative-ai:
+          model-name: gemini-1.5-flash
+          # Optional: temperature for response creativity (0.0 - 1.0)
+          temperature: 0.2
+
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+
+logging:
+  level:
+    root: INFO
+    com.smartspender: DEBUG
+    org.springframework.web: DEBUG
+    org.springframework.ai: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
+app:
+  jwt:
+    secret: your-super-secret-jwt-key-change-this-in-production-environment
+    expiration: 86400000 # 24 hours in milliseconds
+    refresh-expiration: 604800000 # 7 days in milliseconds
+  
+  cors:
+    allowed-origins: http://localhost:3000,http://localhost:5173
+    allowed-methods: GET,POST,PUT,DELETE,OPTIONS
+    allowed-headers: '*'
+    max-age: 3600
+

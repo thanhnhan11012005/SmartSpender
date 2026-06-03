@@ -1,0 +1,46 @@
+/* Responsive Dashboard Styles */
+
+/* Ensure charts scale properly on mobile */
+@media (max-width: 1024px) {
+  /* Force chart containers to be full width */
+  [data-name*="Card"],
+  [data-name*="Frame"] {
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+}
+
+/* Mobile adjustments for stat cards */
+@media (max-width: 640px) {
+  /* Reduce padding on mobile */
+  [data-name="Card"] {
+    padding: 16px !important;
+  }
+
+  /* Adjust font sizes for mobile */
+  [data-name="Rolling number"] {
+    transform: scale(0.85);
+    transform-origin: left center;
+  }
+}
+
+/* Tablet and up - ensure proper spacing */
+@media (min-width: 768px) {
+  /* Maintain proper aspect ratios for charts */
+  [data-name*="Donut"],
+  [data-name*="Graph"] {
+    min-height: 200px;
+  }
+}
+
+/* Smooth transitions for sidebar toggles */
+.sidebar-transition {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Fix for overflow issues on mobile */
+@media (max-width: 1024px) {
+  body {
+    overflow-x: hidden;
+  }
+}

@@ -1,0 +1,17 @@
+# Chặn thư mục thư viện Frontend (Nặng nhất)
+FE/node_modules/
+FE/dist/
+FE/.env.local
+
+# Chặn thư mục build của Backend Spring Boot
+BE/target/
+BE/.mvn/
+BE/*.jar
+BE/out/
+
+# Chặn cấu hình riêng của các công cụ lập trình (IDE)
+.vscode/
+.idea/
+*.iml
+*.log
+body.json
