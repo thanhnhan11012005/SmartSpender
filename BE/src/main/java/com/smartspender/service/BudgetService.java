@@ -11,8 +11,12 @@ import com.smartspender.repository.TransactionRepository;
 import com.smartspender.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.type.TypeReference;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -31,6 +35,9 @@ public class BudgetService {
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
     private final TransactionRepository transactionRepository;
+
+    @Autowired
+    private com.smartspender.config.GeminiAIService geminiAIService;
 
     /**
      * Lấy chi tiết ngân sách kèm chi tiêu thực tế
@@ -199,33 +206,43 @@ public class BudgetService {
         );
         log.info("Prepared Gemini prompt for location {}", resolvedLocation);
 
-        List<AiBudgetSuggestion> suggestions = new ArrayList<>();
-        List<String> preferredNames = List.of("Ăn uống", "Di chuyển", "Giải trí", "Tiền nhà");
-        BigDecimal[] weights;
-        String lowerLocation = resolvedLocation.toLowerCase();
-        if (lowerLocation.contains("hà nội") || lowerLocation.contains("hồ chí minh") || lowerLocation.contains("sài gòn")) {
-            weights = new BigDecimal[] { new BigDecimal("0.32"), new BigDecimal("0.16"), new BigDecimal("0.12"), new BigDecimal("0.40") };
+        String aiResponseText;
+        try {
+            aiResponseText = geminiAIService.call(prompt);
+            log.info("Received AI response: {}", aiResponseText);
+        } catch (Exception e) {
+            log.error("Error calling Gemini API: ", e);
+            throw new IllegalStateException("AI service error", e);
+        }
+
+        String jsonResult = aiResponseText;
+        int startIndex = jsonResult.indexOf('[');
+        int endIndex = jsonResult.lastIndexOf(']');
+        if (startIndex != -1 && endIndex != -1) {
+            jsonResult = jsonResult.substring(startIndex, endIndex + 1);
         } else {
-            weights = new BigDecimal[] { new BigDecimal("0.28"), new BigDecimal("0.18"), new BigDecimal("0.16"), new BigDecimal("0.38") };
+            throw new IllegalStateException("AI did not return a valid JSON array");
         }
 
-        for (int i = 0; i < preferredNames.size(); i++) {
-            String preferredName = preferredNames.get(i);
-            Category matchedCategory = categories.stream()
-                .filter(category -> preferredName.equalsIgnoreCase(category.getName()))
-                .findFirst()
-                .orElse(null);
-
-            BigDecimal suggestedAmount = availableForExpenses.multiply(weights[i]).setScale(0, java.math.RoundingMode.HALF_UP);
-            suggestions.add(AiBudgetSuggestion.builder()
-                .categoryId(matchedCategory != null ? matchedCategory.getId() : null)
-                .categoryName(preferredName)
-                .suggestedAmount(suggestedAmount)
-                .rationale("Phân bổ theo mức sống tại " + resolvedLocation)
-                .build());
+        ObjectMapper mapper = new ObjectMapper();
+        List<AiBudgetSuggestion> suggestions;
+        try {
+            suggestions = mapper.readValue(jsonResult, new TypeReference<List<AiBudgetSuggestion>>() {});
+            
+            for (AiBudgetSuggestion suggestion : suggestions) {
+                Category matchedCategory = categories.stream()
+                    .filter(category -> suggestion.getCategoryName().equalsIgnoreCase(category.getName()))
+                    .findFirst()
+                    .orElse(null);
+                if (matchedCategory != null) {
+                    suggestion.setCategoryId(matchedCategory.getId());
+                }
+            }
+            return suggestions;
+        } catch (Exception e) {
+            log.error("Failed to parse JSON from AI: {}", jsonResult, e);
+            throw new IllegalStateException("Invalid JSON response from AI", e);
         }
-
-        return suggestions;
     }
 
     /**

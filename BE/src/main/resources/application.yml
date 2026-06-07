@@ -38,18 +38,8 @@ spring:
   # ===== Vertex AI Configuration (NEW - Replaces old Gemini API) =====
   # Uses Application Default Credentials from C:\Users\{user}\.config\gcloud\application_default_credentials.json
   ai:
-    google:
-      vertexai:
-        # Project ID will be auto-detected from Application Default Credentials
-        # Or you can explicitly set it here:
-        # project-id: your-gcp-project-id
-        # Location for Vertex AI models (e.g., us-central1, asia-southeast1)
-        location: us-central1
-        # Model name configuration
-        generative-ai:
-          model-name: gemini-1.5-flash
-          # Optional: temperature for response creativity (0.0 - 1.0)
-          temperature: 0.2
+    gemini:
+      api-key: API_KEY_PLACEHOLDER # Not needed when using ADC, but can be set for clarity
 
 server:
   port: 8080
