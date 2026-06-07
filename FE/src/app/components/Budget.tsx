@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import CategoryCreateModal from "./CategoryCreateModal";
 
@@ -654,11 +654,11 @@ export default function Budget({ onNavigateToAI }: { onNavigateToAI?: () => void
       {/* Tabs */}
       <div className="bg-white rounded-[20px] p-[24px]">
         <div className="flex gap-[8px] mb-[24px]">
-          {[
+          {([
             { key: "overview", label: "Tổng quan" },
             { key: "categories", label: "Danh mục" },
             { key: "monthly", label: "Hàng tháng" },
-          ].map((tab) => (
+          ]).map((tab) => (
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key as typeof activeTab)}
@@ -1008,13 +1008,30 @@ export default function Budget({ onNavigateToAI }: { onNavigateToAI?: () => void
                   
                   <div>
                     <p className="mb-2 text-[13px] font-medium text-gray-600">Tỉnh / Thành phố đang sinh sống</p>
-                    <input
-                      type="text"
+                    <select
                       value={aiLocation}
                       onChange={(e) => setAiLocation(e.target.value)}
-                      placeholder="Ví dụ: Hồ Chí Minh, Quy Nhơn, Hà Nội"
-                      className="w-full border border-gray-300 rounded-[10px] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
-                    />
+                      className="w-full border border-gray-300 rounded-[10px] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white"
+                    >
+                      <option value="">-- Chọn Tỉnh / Thành phố --</option>
+                      {[
+                        "Hà Nội", "Hồ Chí Minh", "Hải Phòng", "Đà Nẵng", "Cần Thơ", 
+                        "An Giang", "Bà Rịa - Vũng Tàu", "Bạc Liêu", "Bắc Giang", "Bắc Kạn", 
+                        "Bắc Ninh", "Bến Tre", "Bình Dương", "Bình Định", "Bình Phước", 
+                        "Bình Thuận", "Cà Mau", "Cao Bằng", "Đắk Lắk", "Đắk Nông", 
+                        "Điện Biên", "Đồng Nai", "Đồng Tháp", "Gia Lai", "Hà Giang", 
+                        "Hà Nam", "Hà Tĩnh", "Hải Dương", "Hậu Giang", "Hòa Bình", 
+                        "Hưng Yên", "Khánh Hòa", "Kiên Giang", "Kon Tum", "Lai Châu", 
+                        "Lâm Đồng", "Lạng Sơn", "Lào Cai", "Long An", "Nam Định", 
+                        "Nghệ An", "Ninh Bình", "Ninh Thuận", "Phú Thọ", "Phú Yên", 
+                        "Quảng Bình", "Quảng Nam", "Quảng Ngãi", "Quảng Ninh", "Quảng Trị", 
+                        "Sóc Trăng", "Sơn La", "Tây Ninh", "Thái Bình", "Thái Nguyên", 
+                        "Thanh Hóa", "Thừa Thiên Huế", "Tiền Giang", "Trà Vinh", "Tuyên Quang", 
+                        "Vĩnh Long", "Vĩnh Phúc", "Yên Bái"
+                      ].map(province => (
+                        <option key={province} value={province}>{province}</option>
+                      ))}
+                    </select>
                   </div>
 
                   <div>

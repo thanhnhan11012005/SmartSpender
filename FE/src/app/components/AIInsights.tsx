@@ -70,14 +70,20 @@ export default function AIInsights() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [selectedImageBase64, setSelectedImageBase64] = useState<string | null>(null);
   const [selectedImageMimeType, setSelectedImageMimeType] = useState<string | null>(null);
-  const [isSending, setIsSending] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const [messages, setMessages] = useState<Message[]>([
     // placeholder while we compute welcome on mount
   ]);
 
   const nextId = useMemo(() => (messages.length ? Math.max(...messages.map((m) => m.id)) + 1 : 1), [messages]);
+
+  // Cuộn xuống cuối tin nhắn mỗi khi có tin nhắn mới hoặc AI đang load
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, isLoading]);
 
   // 3. Hàm xử lý khi người dùng chọn file ảnh
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -147,7 +153,7 @@ export default function AIInsights() {
 
     setMessages((prev) => [...prev, userMessage]);
     setDraft("");
-    setIsSending(true);
+    setIsLoading(true);
 
     try {
       const { userId, budgets, categories } = await fetchContext();
@@ -193,7 +199,7 @@ export default function AIInsights() {
       setMessages((prev) => [...prev, fallback]);
       console.error(error);
     } finally {
-      setIsSending(false);
+      setIsLoading(false);
       setSelectedImage(null);
       setSelectedImageBase64(null);
       setSelectedImageMimeType(null);
@@ -215,14 +221,19 @@ export default function AIInsights() {
         const userId = parsed?.id;
         if (!userId) return;
 
-        const [budgetResp, categoryResp] = await Promise.all([
+        const [budgetResp, categoryResp, historyResp] = await Promise.all([
           fetch(`/api/budgets?userId=${userId}`),
           fetch(`/api/categories/user/${userId}/all`),
+          fetch(`/api/ai/chat/history?userId=${userId}`)
         ]);
         if (!budgetResp.ok || !categoryResp.ok) return;
 
         const budgets = (await budgetResp.json()) as BudgetContextItem[];
         const categories = (await categoryResp.json()) as CategoryContextItem[];
+        let history = [];
+        if (historyResp.ok) {
+            history = await historyResp.json();
+        }
 
         // Compute total spent from budgets' spentAmount
         const totalSpent = budgets.reduce((s, b) => s + (b.spentAmount || 0), 0);
@@ -230,15 +241,19 @@ export default function AIInsights() {
         const totalRemaining = totalLimit - totalSpent;
 
         if (mounted) {
-          // set welcome bubble
-          const welcomeText = `Xin chào! Hôm nay bạn đã chi ${formatVND(totalSpent)} và còn lại ${formatVND(totalRemaining)} trong các ngân sách hiện tại. Bạn muốn tôi phân tích mục nào trước hoặc có hóa đơn nào cần tôi quét không?`;
-          setMessages([
-            {
-              id: 1,
-              role: "ai",
-              text: welcomeText,
-            },
-          ]);
+          if (history && history.length > 0) {
+              setMessages(history);
+          } else {
+              // set welcome bubble
+              const welcomeText = `Xin chào! Hôm nay bạn đã chi ${formatVND(totalSpent)} và còn lại ${formatVND(totalRemaining)} trong các ngân sách hiện tại. Bạn muốn tôi phân tích mục nào trước hoặc có hóa đơn nào cần tôi quét không?`;
+              setMessages([
+                {
+                  id: 1,
+                  role: "ai",
+                  text: welcomeText,
+                },
+              ]);
+          }
 
           // derive simple insight cards
           const cards: Array<{ id: number; title: string; description: string; tone: InsightTone }> = [];
@@ -348,6 +363,16 @@ export default function AIInsights() {
               </div>
             </div>
           ))}
+          {isLoading && (
+            <div className="flex justify-start">
+              <div className="max-w-[85%] rounded-2xl px-4 py-3 shadow-sm bg-white border border-[rgba(0,0,0,0.06)] text-[rgba(0,0,0,0.78)] rounded-bl-md flex items-center gap-1.5 h-[44px]">
+                <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+                <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+                <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"></span>
+              </div>
+            </div>
+          )}
+          <div ref={messagesEndRef} />
         </div>
 
         <div className="mt-4 overflow-x-auto">
@@ -356,8 +381,9 @@ export default function AIInsights() {
               <button
                 key={prompt}
                 type="button"
+                disabled={isLoading}
                 onClick={() => void sendMessage(prompt)}
-                className="px-3 py-2 rounded-full text-[13px] bg-[rgba(0,0,0,0.04)] hover:bg-[rgba(0,0,0,0.08)] text-[rgba(0,0,0,0.72)] transition-colors"
+                className="px-3 py-2 rounded-full text-[13px] bg-[rgba(0,0,0,0.04)] hover:bg-[rgba(0,0,0,0.08)] text-[rgba(0,0,0,0.72)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {prompt}
               </button>
@@ -386,11 +412,13 @@ export default function AIInsights() {
             ref={fileInputRef} 
             onChange={handleImageChange} 
             className="hidden" 
+            disabled={isLoading}
           />
           <button
             type="button"
+            disabled={isLoading}
             onClick={() => fileInputRef.current?.click()}
-            className="h-12 w-12 shrink-0 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-600 flex items-center justify-center transition-colors"
+            className="h-12 w-12 shrink-0 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-600 flex items-center justify-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             title="Tải ảnh hóa đơn lên"
           >
             <svg className="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -400,19 +428,20 @@ export default function AIInsights() {
 
           <input
             value={draft}
+            disabled={isLoading}
             onChange={(e) => setDraft(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === "Enter") {
+              if (e.key === "Enter" && !isLoading) {
                 void sendMessage(draft, selectedImage);
               }
             }}
             placeholder={selectedImage ? "Thêm ghi chú cho hóa đơn này..." : "Hỏi AI hoặc đính kèm hóa đơn..."}
-            className="w-full h-12 rounded-xl border border-[rgba(0,0,0,0.08)] bg-white px-4 text-[14px] placeholder:text-[rgba(0,0,0,0.4)] focus:outline-none focus:ring-2 focus:ring-[#8b5cf6]/25 focus:border-[#8b5cf6]"
+            className="w-full h-12 rounded-xl border border-[rgba(0,0,0,0.08)] bg-white px-4 text-[14px] placeholder:text-[rgba(0,0,0,0.4)] focus:outline-none focus:ring-2 focus:ring-[#8b5cf6]/25 focus:border-[#8b5cf6] disabled:bg-gray-50 disabled:text-gray-400"
           />
           <button
             type="button"
             onClick={() => void sendMessage(draft, selectedImage)}
-            disabled={isSending || (!draft.trim() && !selectedImage)}
+            disabled={isLoading || (!draft.trim() && !selectedImage)}
             className="h-12 w-12 shrink-0 rounded-xl bg-[#8b5cf6] hover:bg-[#7c3aed] disabled:opacity-50 disabled:cursor-not-allowed text-white flex items-center justify-center shadow-md transition-colors"
             aria-label="Gửi tin nhắn"
           >
@@ -425,4 +454,3 @@ export default function AIInsights() {
     </div>
   );
 }
-

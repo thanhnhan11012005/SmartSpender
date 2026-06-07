@@ -12,6 +12,7 @@ import MyWallet from "./components/MyWallet";
 import Budget from "./components/Budget";
 import AIInsights from "./components/AIInsights";
 import SettingsPage from "./components/SettingsPage";
+import Overview from "./components/Overview";
 
 export default function App() {
   const [leftSidebarOpen, setLeftSidebarOpen] = useState(false);
@@ -64,25 +65,7 @@ export default function App() {
       <div className="min-w-0 flex-1 overflow-y-auto overflow-x-hidden">
         <div className="p-4 pt-16 sm:p-6 sm:pt-6 lg:p-[20px]">
           {page === "overview" ? (
-            <>
-              {/* Stats Cards */}
-              <div className="mb-4 sm:mb-6 lg:mb-[20px]">
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4 xl:gap-[28px]">
-                  <FinanceStatsCards />
-                </div>
-              </div>
-
-              {/* Cash Flow Chart */}
-              <div className="mb-4 sm:mb-6 lg:mb-[20px]">
-                <CashFlowChart />
-              </div>
-
-              {/* Bottom Widgets */}
-              <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-[20px]">
-                <RecentTransactions onViewAll={() => setPage("transactions")} />
-                <ExpenseCategories />
-              </div>
-            </>
+            <Overview onNavigate={setPage} />
           ) : page === "transactions" ? (
             <div className="mb-4 sm:mb-6 lg:mb-[20px]">
               <TransactionHistory />
