@@ -1,22 +1,32 @@
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
-import { formatVND } from "../../utils/currency";
+import { useFormat } from "../../utils/useFormat";
+import { useTranslation } from "../../hooks/useTranslation";
 
 interface CashFlowChartProps {
   data: Array<{ month: string; income: number; expense: number }>;
 }
 
 export default function CashFlowChart({ data }: CashFlowChartProps) {
+  const { formatCurrency, currency } = useFormat();
+  const { t } = useTranslation();
+
   // Map data to simple chart format, reversing to show oldest to newest left to right
   const chartData = [...data].reverse().map(item => ({
     name: item.month,
-    "Thu nhập": item.income,
-    "Chi tiêu": item.expense
+    [t("chart.cashflow.income")]: item.income,
+    [t("chart.cashflow.expense")]: item.expense
   }));
 
   const formatYAxis = (value: number) => {
-    if (value >= 1000000) return `${(value / 1000000).toFixed(1)} Tr`;
-    if (value >= 1000) return `${(value / 1000).toFixed(0)} K`;
-    return value.toString();
+    const isUSD = currency === "USD";
+    const v = isUSD ? value / 25000 : value;
+    if (isUSD) {
+      if (v >= 1000) return `$${(v / 1000).toFixed(1)}k`;
+      return `$${v}`;
+    }
+    if (v >= 1000000) return `${(v / 1000000).toFixed(1)} Tr`;
+    if (v >= 1000) return `${(v / 1000).toFixed(0)} K`;
+    return v.toString();
   };
 
   const CustomTooltip = ({ active, payload, label }: any) => {
@@ -31,7 +41,7 @@ export default function CashFlowChart({ data }: CashFlowChartProps) {
                 {entry.name}
               </span>
               <span className="font-['Inter'] text-[13px] font-semibold text-gray-900">
-                {formatVND(entry.value)}
+                {formatCurrency(entry.value)}
               </span>
             </div>
           ))}
@@ -44,7 +54,7 @@ export default function CashFlowChart({ data }: CashFlowChartProps) {
   return (
     <div className="rounded-[24px] bg-white p-6 shadow-sm ring-1 ring-gray-100">
       <div className="mb-6 flex items-center justify-between">
-        <h3 className="font-['Inter'] text-[18px] font-semibold text-gray-900">Phân tích dòng tiền</h3>
+        <h3 className="font-['Inter'] text-[18px] font-semibold text-gray-900">{t("chart.cashflow.title")}</h3>
         <div className="flex gap-2">
           {/* Mock filters for aesthetics */}
           <div className="rounded-full bg-gray-100 px-3 py-1 text-[12px] font-medium text-gray-600">6 Tháng</div>
@@ -53,7 +63,7 @@ export default function CashFlowChart({ data }: CashFlowChartProps) {
       
       <div className="h-[300px] w-full">
         {chartData.length === 0 ? (
-          <div className="flex h-full items-center justify-center text-gray-400">Không có dữ liệu</div>
+          <div className="flex h-full items-center justify-center text-gray-400">{t("common.noData")}</div>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={chartData} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
@@ -81,7 +91,7 @@ export default function CashFlowChart({ data }: CashFlowChartProps) {
               />
               <Line 
                 type="monotone" 
-                dataKey="Thu nhập" 
+                dataKey={t("chart.cashflow.income")} 
                 stroke="#10b981" 
                 strokeWidth={3}
                 dot={{ r: 4, strokeWidth: 2, fill: "#fff" }}
@@ -89,7 +99,7 @@ export default function CashFlowChart({ data }: CashFlowChartProps) {
               />
               <Line 
                 type="monotone" 
-                dataKey="Chi tiêu" 
+                dataKey={t("chart.cashflow.expense")} 
                 stroke="#8b5cf6" 
                 strokeWidth={3}
                 dot={{ r: 4, strokeWidth: 2, fill: "#fff" }}

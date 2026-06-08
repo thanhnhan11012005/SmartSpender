@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { formatVND } from "../../utils/currency";
+import { useFormat } from "../../utils/useFormat";
+import { useTranslation } from "../../hooks/useTranslation";
 
 type Wallet = {
   id: number;
@@ -112,6 +113,8 @@ export default function MyWallet() {
   const [isLoadingTransactions, setIsLoadingTransactions] = useState(false);
   const [hiddenWalletIds, setHiddenWalletIds] = useState<Set<number>>(new Set());
   const [hasInitializedWalletVisibility, setHasInitializedWalletVisibility] = useState(false);
+  const { formatCurrency, formatDate } = useFormat();
+  const { t } = useTranslation();
 
   const selectedPreviewWallet = useMemo(() => {
     if (editingWalletId !== null) {
@@ -487,8 +490,8 @@ export default function MyWallet() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-black">Ví của tôi</h1>
-          <p className="text-sm text-[rgba(0,0,0,0.6)] mt-1">Quản lý thẻ và ví của bạn</p>
+          <h1 className="text-2xl font-bold text-black">{t("wallet.title")}</h1>
+          <p className="text-sm text-[rgba(0,0,0,0.6)] mt-1">{t("wallet.desc")}</p>
         </div>
 
         <div className="flex items-center gap-3">
@@ -502,7 +505,7 @@ export default function MyWallet() {
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
               <path d="M12 5v14M5 12h14" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
-            Thêm thẻ/ví
+            {t("wallet.add")}
           </button>
           <button
             onClick={(event) => {
@@ -514,7 +517,7 @@ export default function MyWallet() {
             <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
               <path d="M7 7h10M7 7l3-3M7 7l3 3M17 17H7m10 0-3 3m3-3-3-3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
-            Chuyển tiền
+            {t("wallet.transfer")}
           </button>
         </div>
       </div>
@@ -524,13 +527,13 @@ export default function MyWallet() {
         <div className="flex items-center justify-between">
           <div>
             <div className="flex items-center gap-2">
-              <p className="text-sm text-[rgba(0,0,0,0.6)]">Tổng tài sản</p>
+              <p className="text-sm text-[rgba(0,0,0,0.6)]">{t("wallet.total")}</p>
               <button
                 type="button"
                 onClick={() => setShowBalance((prev) => !prev)}
                 className="inline-flex items-center justify-center w-7 h-7 rounded-md hover:bg-[rgba(0,0,0,0.05)] transition-colors"
-                aria-label={showBalance ? "Ẩn số dư" : "Hiện số dư"}
-                title={showBalance ? "Ẩn số dư" : "Hiện số dư"}
+                aria-label={showBalance ? t("wallet.hideBalance") : t("wallet.showBalance")}
+                title={showBalance ? t("wallet.hideBalance") : t("wallet.showBalance")}
               >
                 {showBalance ? (
                   <svg className="w-4 h-4 text-[rgba(0,0,0,0.65)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -544,9 +547,9 @@ export default function MyWallet() {
                 )}
               </button>
             </div>
-            <p className="text-lg font-semibold mt-1">{showBalance ? formatVND(totalAssets) : hiddenAmount}</p>
+            <p className="text-lg font-semibold mt-1">{showBalance ? formatCurrency(totalAssets) : hiddenAmount}</p>
           </div>
-          <div className="text-sm text-[rgba(0,0,0,0.5)]">Tính theo VNĐ</div>
+          <div className="text-sm text-[rgba(0,0,0,0.5)]">{t("wallet.fixedRate")}</div>
         </div>
       </div>
 
@@ -554,11 +557,11 @@ export default function MyWallet() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filtered.length === 0 ? (
           <div className="col-span-full rounded-2xl border border-dashed border-gray-300 bg-white px-6 py-10 text-center text-sm text-gray-500">
-            Chưa có ví nào để hiển thị.
+            {t("wallet.empty")}
           </div>
         ) : (
           filtered.map((wallet) => {
-            const balanceLabel = wallet.type === "credit" ? "Hạn mức còn lại" : "Số dư";
+            const balanceLabel = wallet.type === "credit" ? t("wallet.creditLimit") : t("wallet.balance");
             const showAccount = (wallet.accountNumber ?? null) !== null && wallet.type !== "cash";
             const isMenuOpen = activeMenuWalletId === wallet.id;
 
@@ -603,13 +606,13 @@ export default function MyWallet() {
                             onClick={() => openEditModal(wallet)}
                             className="flex w-full items-center rounded-xl px-3 py-2 text-left hover:bg-purple-50 hover:text-purple-700"
                           >
-                            Chỉnh sửa
+                            {t("wallet.actionEdit")}
                           </button>
                           <button
                             onClick={() => handleDelete(wallet.id)}
                             className="flex w-full items-center rounded-xl px-3 py-2 text-left text-red-500 hover:bg-red-50 hover:text-red-600"
                           >
-                            Xóa
+                            {t("wallet.actionDelete")}
                           </button>
                         </div>
                       )}
@@ -621,7 +624,7 @@ export default function MyWallet() {
                     <div className="text-center">
                       <div className="text-sm text-white/90">{balanceLabel}</div>
                       <div className="text-2xl font-bold mt-2">
-                        {hiddenWalletIds.has(wallet.id) ? hiddenAmount : formatVND(wallet.balance)}
+                        {hiddenWalletIds.has(wallet.id) ? hiddenAmount : formatCurrency(wallet.balance)}
                       </div>
                       <button
                         type="button"
@@ -638,7 +641,7 @@ export default function MyWallet() {
                           });
                         }}
                         className="mt-3 inline-flex items-center justify-center w-6 h-6 rounded-md hover:bg-white/10 transition-colors"
-                        title={hiddenWalletIds.has(wallet.id) ? "Hiện số dư" : "Ẩn số dư"}
+                        title={hiddenWalletIds.has(wallet.id) ? t("wallet.showBalance") : t("wallet.hideBalance")}
                       >
                         {hiddenWalletIds.has(wallet.id) ? (
                           <svg className="w-4 h-4 text-white/90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -656,7 +659,7 @@ export default function MyWallet() {
 
                   {/* Bottom row */}
                   <div className="flex items-center justify-between text-sm">
-                    <div className="uppercase text-xs tracking-widest">Người dùng</div>
+                    <div className="uppercase text-xs tracking-widest">{t("wallet.user")}</div>
                     <div className="text-xs">{showAccount ? `**** ${wallet.accountNumber}` : wallet.type === "cash" ? "" : ""}</div>
                   </div>
                 </div>
@@ -671,20 +674,20 @@ export default function MyWallet() {
         <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h2 className="text-lg font-semibold text-gray-900">
-              Lịch sử giao dịch của {selectedPreviewWallet ? selectedPreviewWallet.name : "..."}
+              {t("wallet.historyTitle", { name: selectedPreviewWallet ? selectedPreviewWallet.name : "..." })}
             </h2>
-            <p className="text-sm text-gray-500">Xem nhanh giao dịch gần nhất của ví hiện có.</p>
+            <p className="text-sm text-gray-500">{t("wallet.historyDesc")}</p>
           </div>
         </div>
 
         <div className="mt-4 divide-y divide-gray-100 overflow-hidden rounded-2xl border border-gray-100">
           {isLoadingTransactions ? (
-            <div className="px-4 py-3 text-center text-sm text-gray-500">Đang tải lịch sử giao dịch...</div>
+            <div className="px-4 py-3 text-center text-sm text-gray-500">{t("wallet.loadingHistory")}</div>
           ) : transactionPreview.length === 0 ? (
-            <div className="px-4 py-3 text-center text-sm text-gray-500">Chưa có giao dịch nào</div>
+            <div className="px-4 py-3 text-center text-sm text-gray-500">{t("wallet.noTransactions")}</div>
           ) : (
             transactionPreview.map((txn) => {
-              const displayAmount = txn.type === "income" ? `+${formatVND(txn.amount)}` : txn.type === "expense" ? `-${formatVND(txn.amount)}` : formatVND(txn.amount);
+              const displayAmount = txn.type === "income" ? `+${formatCurrency(txn.amount)}` : txn.type === "expense" ? `-${formatCurrency(txn.amount)}` : formatCurrency(txn.amount);
               const amountColor = txn.type === "income" ? "text-green-600" : txn.type === "expense" ? "text-red-500" : "text-gray-600";
               
               return (
@@ -692,14 +695,14 @@ export default function MyWallet() {
                   <div className="flex-1 min-w-0">
                     <div className="font-medium text-gray-900 truncate">
                       {txn.type === "transfer" && <span className="text-lg">⇄ </span>}
-                      {txn.description || "Giao dịch không tên"}
+                      {txn.description || t("wallet.unnamedTransaction")}
                     </div>
                     {txn.location && (
                       <div className="text-xs text-gray-400 truncate mt-0.5">{txn.location}</div>
                     )}
                     <div className="text-xs text-gray-500 mt-1">
                       {txn.category?.name && <span>{txn.category.name} • </span>}
-                      {new Date(txn.transactionDate).toLocaleDateString("vi-VN")}
+                      {formatDate(txn.transactionDate)}
                     </div>
                   </div>
                   <div className={`font-semibold ${amountColor} ml-4 flex-shrink-0`}>{displayAmount}</div>
@@ -716,8 +719,8 @@ export default function MyWallet() {
           <div className="flex max-h-[calc(100vh-2rem)] w-full max-w-2xl flex-col rounded-3xl bg-white p-5 shadow-2xl sm:p-6" onClick={(event) => event.stopPropagation()}>
             <div className="flex shrink-0 items-start justify-between gap-4">
               <div>
-                <h3 className="text-xl font-semibold text-gray-900">{editingWalletId !== null ? "Chỉnh sửa ví" : "Thêm thẻ/ví mới"}</h3>
-                <p className="mt-1 text-sm text-gray-500">Nhập thông tin ví để lưu vào cơ sở dữ liệu.</p>
+                <h3 className="text-xl font-semibold text-gray-900">{editingWalletId !== null ? t("wallet.modalEditTitle") : t("wallet.modalAddTitle")}</h3>
+                <p className="mt-1 text-sm text-gray-500">{t("wallet.modalDesc")}</p>
               </div>
               <button onClick={closeModal} className="rounded-full p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600">
                 <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -728,7 +731,7 @@ export default function MyWallet() {
 
             <form className="mt-6 grid flex-1 gap-4 overflow-y-auto pr-1 sm:grid-cols-2" onSubmit={handleSubmit}>
               <label className="flex flex-col gap-2 sm:col-span-2">
-                <span className="text-sm font-medium text-gray-700">Tên ví</span>
+                <span className="text-sm font-medium text-gray-700">{t("wallet.formName")}</span>
                 <input
                   value={form.name}
                   onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
@@ -739,21 +742,21 @@ export default function MyWallet() {
               </label>
 
               <label className="flex flex-col gap-2">
-                <span className="text-sm font-medium text-gray-700">Loại ví</span>
+                <span className="text-sm font-medium text-gray-700">{t("wallet.formType")}</span>
                 <select
                   value={form.type}
                   onChange={(event) => setForm((current) => ({ ...current, type: event.target.value }))}
                   className="rounded-xl border border-gray-200 px-4 py-3 outline-none transition focus:border-purple-300 focus:ring-2 focus:ring-purple-100"
                 >
-                  <option value="cash">Tiền mặt</option>
-                  <option value="bank">Ngân hàng</option>
-                  <option value="ewallet">Ví điện tử</option>
-                  <option value="credit">Thẻ tín dụng</option>
+                  <option value="cash">{t("wallet.formTypeCash")}</option>
+                  <option value="bank">{t("wallet.formTypeBank")}</option>
+                  <option value="ewallet">{t("wallet.formTypeEwallet")}</option>
+                  <option value="credit">{t("wallet.formTypeCredit")}</option>
                 </select>
               </label>
 
               <label className="flex flex-col gap-2">
-                <span className="text-sm font-medium text-gray-700">Số tài khoản</span>
+                <span className="text-sm font-medium text-gray-700">{t("wallet.formAccountNumber")}</span>
                 <input
                   value={form.accountNumber}
                   onChange={(event) => setForm((current) => ({ ...current, accountNumber: event.target.value }))}
@@ -763,7 +766,7 @@ export default function MyWallet() {
               </label>
 
               <label className="flex flex-col gap-2">
-                <span className="text-sm font-medium text-gray-700">Số dư</span>
+                <span className="text-sm font-medium text-gray-700">{t("wallet.formBalance")}</span>
                 <input
                   type="text"
                   inputMode="numeric"
@@ -782,7 +785,7 @@ export default function MyWallet() {
               </label>
 
               <label className="flex flex-col gap-2 sm:col-span-2">
-                <span className="text-sm font-medium text-gray-700">Ghi chú</span>
+                <span className="text-sm font-medium text-gray-700">{t("wallet.formDesc")}</span>
                 <textarea
                   value={form.description}
                   onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))}
@@ -792,7 +795,7 @@ export default function MyWallet() {
               </label>
 
               <label className="flex flex-col gap-2 sm:col-span-2">
-                <span className="text-sm font-medium text-gray-700">Màu sắc gradient</span>
+                <span className="text-sm font-medium text-gray-700">{t("wallet.formColor")}</span>
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                   {walletColors.map((item) => {
                     const isActive = form.color === item.value;

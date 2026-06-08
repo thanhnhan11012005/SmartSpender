@@ -36,6 +36,15 @@ public class User {
     @Column(name = "CREATED_AT", nullable = false, columnDefinition = "TIMESTAMP WITH TIME ZONE DEFAULT NOW()")
     private OffsetDateTime createdAt;
 
+    @Column(name = "AVATAR_URL", columnDefinition = "TEXT")
+    private String avatarUrl;
+
+    @Column(name = "LANGUAGE", length = 10)
+    private String language;
+
+    @Column(name = "DATE_FORMAT", length = 20)
+    private String dateFormat;
+
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Wallet> wallets;
 

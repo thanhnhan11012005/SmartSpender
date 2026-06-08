@@ -3,6 +3,7 @@ import FinanceStatsCards from "./FinanceStatsCards";
 import CashFlowChart from "./CashFlowChart";
 import RecentTransactions from "./RecentTransactions";
 import ExpenseCategories from "./ExpenseCategories";
+import { useTranslation } from "../../hooks/useTranslation";
 
 export type DashboardData = {
   totalBalance: number;
@@ -17,6 +18,7 @@ export type DashboardData = {
 };
 
 export default function Overview({ onNavigate }: { onNavigate: (page: any) => void }) {
+  const { t } = useTranslation();
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -49,7 +51,7 @@ export default function Overview({ onNavigate }: { onNavigate: (page: any) => vo
     );
   }
 
-  if (!data) return <div className="p-4 text-center text-gray-500">Không có dữ liệu</div>;
+  if (!data) return <div className="p-4 text-center text-gray-500">{t("common.noData")}</div>;
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
