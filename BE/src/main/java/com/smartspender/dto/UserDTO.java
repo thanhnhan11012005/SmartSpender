@@ -31,4 +31,12 @@ public class UserDTO {
     private String address;
 
     private String createdAt;
+
+    private String avatarUrl;
+
+    @Size(max = 10, message = "Language must not exceed 10 characters")
+    private String language;
+
+    @Size(max = 20, message = "Date format must not exceed 20 characters")
+    private String dateFormat;
 }

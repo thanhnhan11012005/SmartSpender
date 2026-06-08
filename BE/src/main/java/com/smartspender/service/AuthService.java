@@ -53,6 +53,9 @@ public class AuthService {
                 .email(savedUser.getEmail())
                 .phone(savedUser.getPhone())
             .address(savedUser.getAddress())
+                .avatarUrl(savedUser.getAvatarUrl())
+                .language(savedUser.getLanguage())
+                .dateFormat(savedUser.getDateFormat())
                 .createdAt(savedUser.getCreatedAt() != null ? savedUser.getCreatedAt().toString() : null)
                 .build();
     }
@@ -93,6 +96,9 @@ public class AuthService {
                 .email(user.getEmail())
                 .phone(user.getPhone())
             .address(user.getAddress())
+                .avatarUrl(user.getAvatarUrl())
+                .language(user.getLanguage())
+                .dateFormat(user.getDateFormat())
                 .createdAt(user.getCreatedAt() != null ? user.getCreatedAt().toString() : null)
                 .build();
     }

@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import CategoryCreateModal from "./CategoryCreateModal";
+import { useFormat } from "../../utils/useFormat";
+import { useTranslation } from "../../hooks/useTranslation";
 
 // ========== TYPES ==========
 interface BudgetDetail {
@@ -63,13 +65,8 @@ export default function Budget({ onNavigateToAI }: { onNavigateToAI?: () => void
   const [aiIsUsingFallback, setAiIsUsingFallback] = useState(false);
 
   // ========== HELPER FUNCTIONS ==========
-  const formatVND = (value: number) =>
-    new Intl.NumberFormat("vi-VN", {
-      style: "currency",
-      currency: "VND",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(value);
+  const { formatCurrency: formatVND } = useFormat();
+  const { t } = useTranslation();
 
   // Normalize and format money input (keep digits in state, show formatted with dots)
   function normalizeMoneyInput(value: string) {
@@ -593,9 +590,9 @@ export default function Budget({ onNavigateToAI }: { onNavigateToAI?: () => void
       {/* Header */}
       <div className="bg-white rounded-[20px] p-[24px]">
         <h1 className="text-[28px] font-['Inter:Semi_Bold',sans-serif] font-semibold text-black mb-[2px]">
-          Ngân sách
+          {t("budget.title")}
         </h1>
-        <p className="text-[14px] text-[rgba(0,0,0,0.6)]">Quản lý và theo dõi ngân sách của bạn</p>
+        <p className="text-[14px] text-[rgba(0,0,0,0.6)]">{t("budget.desc")}</p>
       </div>
 
       {/* Summary Cards - Hiển thị 3 thẻ: Tổng Ngân Sách, Đã Chi Tiêu, Còn Lại */}
@@ -603,7 +600,7 @@ export default function Budget({ onNavigateToAI }: { onNavigateToAI?: () => void
         {/* Total Budget */}
         <div className="bg-gradient-to-br from-[#e6f1fd] to-[#cce5ff] rounded-[16px] p-[20px] border border-blue-200">
           <div className="flex items-center justify-between mb-[12px]">
-            <p className="text-[12px] text-black/60 font-medium">TỔNG NGÂN SÁCH</p>
+            <p className="text-[12px] text-black/60 font-medium">{t("budget.totalBudget")}</p>
             <div className="bg-white rounded-[8px] p-[6px]">
               <svg className="size-[16px] text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -613,13 +610,13 @@ export default function Budget({ onNavigateToAI }: { onNavigateToAI?: () => void
           <h3 className="text-[24px] font-['Inter:Semi_Bold',sans-serif] font-semibold text-blue-600">
             {formatVND(totalBudget)}
           </h3>
-          <p className="text-[12px] text-black/50 mt-[8px]">cho tháng này</p>
+          <p className="text-[12px] text-black/50 mt-[8px]">{t("budget.forThisMonth")}</p>
         </div>
 
         {/* Total Spent */}
         <div className="bg-gradient-to-br from-[#fee2e2] to-[#fcc2c2] rounded-[16px] p-[20px] border border-red-200">
           <div className="flex items-center justify-between mb-[12px]">
-            <p className="text-[12px] text-black/60 font-medium">ĐÃ CHI TIÊU</p>
+            <p className="text-[12px] text-black/60 font-medium">{t("budget.totalSpent")}</p>
             <div className="bg-white rounded-[8px] p-[6px]">
               <svg className="size-[16px] text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 17h8m0 0v-8m0 8l-8-8-4 4-6-6" />
@@ -630,14 +627,14 @@ export default function Budget({ onNavigateToAI }: { onNavigateToAI?: () => void
             {formatVND(totalSpent)}
           </h3>
           <p className="text-[12px] text-black/50 mt-[8px]">
-            {totalPercentage.toFixed(1)}% ngân sách
+            {totalPercentage.toFixed(1)}{t("budget.budgetPercentage")}
           </p>
         </div>
 
         {/* Remaining */}
         <div className="bg-gradient-to-br from-[#dcfce7] to-[#bbf7d0] rounded-[16px] p-[20px] border border-green-200">
           <div className="flex items-center justify-between mb-[12px]">
-            <p className="text-[12px] text-black/60 font-medium">CÒN LẠI</p>
+            <p className="text-[12px] text-black/60 font-medium">{t("budget.remaining")}</p>
             <div className="bg-white rounded-[8px] p-[6px]">
               <svg className="size-[16px] text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
@@ -647,7 +644,7 @@ export default function Budget({ onNavigateToAI }: { onNavigateToAI?: () => void
           <h3 className="text-[24px] font-['Inter:Semi_Bold',sans-serif] font-semibold text-green-600">
             {formatVND(totalRemaining)}
           </h3>
-          <p className="text-[12px] text-black/50 mt-[8px]">để chi tiêu</p>
+          <p className="text-[12px] text-black/50 mt-[8px]">{t("budget.toSpend")}</p>
         </div>
       </div>
 
@@ -655,9 +652,9 @@ export default function Budget({ onNavigateToAI }: { onNavigateToAI?: () => void
       <div className="bg-white rounded-[20px] p-[24px]">
         <div className="flex gap-[8px] mb-[24px]">
           {([
-            { key: "overview", label: "Tổng quan" },
-            { key: "categories", label: "Danh mục" },
-            { key: "monthly", label: "Hàng tháng" },
+            { key: "overview", label: t("budget.tabOverview") },
+            { key: "categories", label: t("budget.tabCategories") },
+            { key: "monthly", label: t("budget.tabMonthly") },
           ]).map((tab) => (
             <button
               key={tab.key}
@@ -678,7 +675,7 @@ export default function Budget({ onNavigateToAI }: { onNavigateToAI?: () => void
             {/* Overall Budget Progress */}
             <div>
               <div className="flex items-center justify-between mb-[12px]">
-                <p className="text-[14px] font-medium text-black">Tiến độ ngân sách tổng thể</p>
+                <p className="text-[14px] font-medium text-black">{t("budget.progress")}</p>
                 <p className="text-[14px] font-semibold text-black">
                   {formatVND(totalSpent)} / {formatVND(totalBudget)}
                 </p>
@@ -700,10 +697,10 @@ export default function Budget({ onNavigateToAI }: { onNavigateToAI?: () => void
 
                 <p className="min-w-0 flex-1 text-[14px] leading-6 text-[rgba(0,0,0,0.74)]">
                   {totalPercentage > 90
-                    ? "⚠️ Chi tiêu của bạn đang vượt mức cảnh báo! Hãy kiểm soát chi tiêu để không vượt ngân sách."
+                    ? t("budget.aiWarning")
                     : totalPercentage > 70
-                    ? "💭 Chi tiêu đang tăng bình thường. Tiếp tục theo dõi để tối ưu ngân sách."
-                    : "✅ Chi tiêu của bạn còn rất an toàn. Hãy tiếp tục duy trì thói quen chi tiêu hợp lý."}
+                    ? t("budget.aiNormal")
+                    : t("budget.aiSafe")}
                 </p>
 
                 <button
@@ -711,17 +708,17 @@ export default function Budget({ onNavigateToAI }: { onNavigateToAI?: () => void
                   onClick={onNavigateToAI}
                   className="shrink-0 whitespace-nowrap text-[13px] font-semibold text-[#8b5cf6] transition-colors hover:text-[#7c3aed]"
                 >
-                  Hỏi AI chi tiết ➔
+                  {t("budget.askAI")}
                 </button>
               </div>
             </div>
 
             {/* Budget Breakdown */}
             <div className="mt-[24px]">
-              <h4 className="text-[16px] font-semibold text-black mb-[16px]">Chi tiêu theo danh mục</h4>
+              <h4 className="text-[16px] font-semibold text-black mb-[16px]">{t("budget.categoryBreakdown")}</h4>
               {budgets.length === 0 ? (
                 <div className="text-center py-8 text-gray-500">
-                  <p>Chưa có ngân sách nào. Hãy tạo ngân sách mới để bắt đầu.</p>
+                  <p>{t("budget.noBudget")}</p>
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -754,7 +751,7 @@ export default function Budget({ onNavigateToAI }: { onNavigateToAI?: () => void
                               {formatVND(budget.spentAmount)} / {formatVND(budget.limitAmount)}
                             </p>
                             <p className={`mt-1 text-xs font-semibold ${getStatColor(percentage)}`}>
-                              {percentage.toFixed(1)}% sử dụng
+                              {percentage.toFixed(1)}% {t("budget.used")}
                             </p>
                           </div>
                         </div>
@@ -788,7 +785,7 @@ export default function Budget({ onNavigateToAI }: { onNavigateToAI?: () => void
                       <div className="flex-1">
                         <p className="text-[14px] font-medium text-black">{budget.categoryName}</p>
                         <p className={`text-[12px] font-semibold ${getStatColor(percentage)}`}>
-                          {percentage.toFixed(1)}% sử dụng
+                          {percentage.toFixed(1)}% {t("budget.used")}
                         </p>
                       </div>
                       <div className="text-right">
@@ -801,13 +798,13 @@ export default function Budget({ onNavigateToAI }: { onNavigateToAI?: () => void
                           onClick={() => openEditBudgetModal(budget)}
                           className="px-[8px] py-[6px] bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-[6px] text-[12px] font-medium transition-colors"
                         >
-                          Sửa
+                          {t("budget.edit")}
                         </button>
                         <button
                           onClick={() => handleDeleteBudget(budget.id)}
                           className="px-[8px] py-[6px] bg-red-50 hover:bg-red-100 text-red-600 rounded-[6px] text-[12px] font-medium transition-colors"
                         >
-                          Xóa
+                          {t("budget.delete")}
                         </button>
                       </div>
                     </div>
@@ -830,11 +827,11 @@ export default function Budget({ onNavigateToAI }: { onNavigateToAI?: () => void
         {activeTab === "monthly" && (
           <div className="space-y-[16px]">
             <div>
-              <h4 className="text-[14px] font-medium text-black mb-[12px]">Xu hướng chi tiêu hàng tháng</h4>
+              <h4 className="text-[14px] font-medium text-black mb-[12px]">{t("budget.monthlyTrend")}</h4>
               
               {monthlyChartData.length === 0 ? (
                 <div className="text-center py-8 text-gray-500">
-                  <p>Chưa có dữ liệu hàng tháng. Hãy tạo ngân sách để xem biểu đồ.</p>
+                  <p>{t("budget.noMonthlyData")}</p>
                 </div>
               ) : (
                 <div className="bg-white border border-gray-200 rounded-[12px] p-[16px]">
@@ -852,16 +849,15 @@ export default function Budget({ onNavigateToAI }: { onNavigateToAI?: () => void
                         }}
                       />
                       <Legend />
-                      <Bar dataKey="hạn_mức" fill="#8b5cf6" name="Hạn mức" radius={[8, 8, 0, 0]} />
-                      <Bar dataKey="thực_tế" fill="#ef4444" name="Thực tế" radius={[8, 8, 0, 0]} />
+                      <Bar dataKey="hạn_mức" fill="#8b5cf6" name={t("budget.limit")} radius={[8, 8, 0, 0]} />
+                      <Bar dataKey="thực_tế" fill="#ef4444" name={t("budget.actual")} radius={[8, 8, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
 
                   {/* Explanation */}
                   <div className="mt-[16px] p-[12px] bg-blue-50 border border-blue-200 rounded-[8px]">
                     <p className="text-[13px] text-blue-800">
-                      <strong>💡 Ghi chú:</strong> Biểu đồ so sánh hạn mức đặt ra (xanh) với chi tiêu thực tế (đỏ) trong {monthlyChartData.length} tháng gần nhất.
-                      Nếu cột đỏ cao hơn cột xanh, nghĩa là bạn đã chi tiêu vượt quá hạn mức.
+                      <strong>{t("budget.note")}</strong> {t("budget.chartDesc", { months: monthlyChartData.length.toString() })}
                     </p>
                   </div>
                 </div>
@@ -881,7 +877,7 @@ export default function Budget({ onNavigateToAI }: { onNavigateToAI?: () => void
           }}
           className="w-full bg-[#8b5cf6] hover:bg-[#7c3aed] text-white py-[12px] rounded-[12px] text-[14px] font-semibold transition-colors"
         >
-          + Tạo ngân sách mới
+          {t("budget.createBtnLarge")}
         </button>
       </div>
 
@@ -893,7 +889,7 @@ export default function Budget({ onNavigateToAI }: { onNavigateToAI?: () => void
             {/* 1. CỐ ĐỊNH MODAL HEADER */}
             <div className="p-[24px] pb-4 border-b border-gray-100 flex items-center justify-between">
               <h2 className="text-[20px] font-semibold text-black flex items-center gap-2">
-                {editingBudgetId !== null ? "✏️ Chỉnh sửa ngân sách" : "🎯 Tạo ngân sách mới"}
+                {editingBudgetId !== null ? t("budget.editTitle") : t("budget.createTitle")}
               </h2>
               <button 
                 onClick={() => {
@@ -917,7 +913,7 @@ export default function Budget({ onNavigateToAI }: { onNavigateToAI?: () => void
               <form id="budget-main-form" onSubmit={handleAddBudget} className="space-y-[16px]">
                 {/* Chọn danh mục */}
                 <div>
-                  <label className="block text-[14px] font-medium text-gray-700 mb-[8px]">Danh mục áp dụng</label>
+                  <label className="block text-[14px] font-medium text-gray-700 mb-[8px]">{t("budget.categoryToApply")}</label>
                   <select
                     value={formData.categoryId}
                     onChange={(e) => {
@@ -931,21 +927,21 @@ export default function Budget({ onNavigateToAI }: { onNavigateToAI?: () => void
                     className="w-full border border-gray-300 rounded-[10px] px-[14px] py-[11px] text-[14px] focus:outline-none focus:ring-2 focus:ring-purple-500 bg-gray-50/50"
                     required
                   >
-                    <option value="">-- Chọn danh mục --</option>
+                    <option value="">{t("budget.selectCategory")}</option>
                     {categories.map((cat) => (
                       <option key={cat.id} value={String(cat.id)}>
                         {cat.icon ? `${cat.icon} ${cat.name}` : cat.name}
                       </option>
                      ))}
                     <option value="NEW_CATEGORY" className="text-purple-600 font-semibold">
-                      + Thêm danh mục mới...
+                      {t("budget.addNewCategory")}
                     </option>
                   </select>
                 </div>
 
                 {/* Nhập số tiền hạn mức */}
                 <div>
-                  <label className="block text-[14px] font-medium text-gray-700 mb-[8px]">Hạn mức chi tiêu (VNĐ)</label>
+                  <label className="block text-[14px] font-medium text-gray-700 mb-[8px]">{t("budget.limitAmount")}</label>
                   <input
                     type="text"
                     inputMode="numeric"
@@ -988,7 +984,7 @@ export default function Budget({ onNavigateToAI }: { onNavigateToAI?: () => void
 
                 {/* Chọn tháng áp dụng */}
                 <div>
-                  <label className="block text-[14px] font-medium text-gray-700 mb-[8px]">Tháng áp dụng ngân sách</label>
+                  <label className="block text-[14px] font-medium text-gray-700 mb-[8px]">{t("budget.monthToApply")}</label>
                   <input
                     type="month"
                     value={formData.month}

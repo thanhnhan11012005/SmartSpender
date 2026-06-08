@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useTranslation } from "../../hooks/useTranslation";
 
 type SidebarPage = "overview" | "transactions" | "wallet" | "budget" | "ai" | "settings" | "login" | "register";
 
@@ -11,6 +12,7 @@ export default function FinanceSidebar({
 }) {
   const [displayName, setDisplayName] = useState<string>("Nguyễn Hồ Hoàng Tiến");
   const [avatarSrc, setAvatarSrc] = useState<string | null>(null);
+  const { t } = useTranslation();
 
   // Keep avatar/user in sync with localStorage per-user keys: userAvatar:{id}
   useEffect(() => {
@@ -22,12 +24,9 @@ export default function FinanceSidebar({
           setAvatarSrc(null);
           return;
         }
-        const parsed = JSON.parse(raw) as { id?: number; email?: string; name?: string };
+        const parsed = JSON.parse(raw) as { id?: number; email?: string; name?: string; avatarUrl?: string };
         setDisplayName(parsed.name || "Người dùng");
-        const key = parsed.id ? `userAvatar:${parsed.id}` : parsed.email ? `userAvatar:${parsed.email}` : null;
-        const stored = key ? localStorage.getItem(key) : null;
-        const avatarData = stored || null;
-        setAvatarSrc(avatarData);
+        setAvatarSrc(parsed.avatarUrl || null);
       } catch {
         setDisplayName("Người dùng");
         setAvatarSrc(null);
@@ -54,7 +53,7 @@ export default function FinanceSidebar({
   const menu = [
     { 
       key: "overview" as SidebarPage, 
-      label: "Tổng quan", 
+      label: t("sidebar.overview"), 
       icon: (
         <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
           <rect x="3" y="3" width="7" height="9" rx="1" />
@@ -66,7 +65,7 @@ export default function FinanceSidebar({
     },
     { 
       key: "transactions" as SidebarPage, 
-      label: "Giao dịch", 
+      label: t("sidebar.transactions"), 
       icon: (
         <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
           <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
@@ -75,7 +74,7 @@ export default function FinanceSidebar({
     },
     { 
       key: "wallet" as SidebarPage, 
-      label: "Ví của tôi", 
+      label: t("sidebar.wallet"), 
       icon: (
         <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
           <path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3v4a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-9" />
@@ -85,7 +84,7 @@ export default function FinanceSidebar({
     },
     { 
       key: "budget" as SidebarPage, 
-      label: "Ngân sách", 
+      label: t("sidebar.budget"), 
       icon: (
         <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
           <path d="M21.21 15.89A10 10 0 1 1 8 2.83" />
@@ -95,7 +94,7 @@ export default function FinanceSidebar({
     },
     { 
       key: "ai" as SidebarPage, 
-      label: "Gợi ý AI", 
+      label: t("sidebar.ai"), 
       icon: (
         <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
           <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
@@ -108,7 +107,7 @@ export default function FinanceSidebar({
   const accountMenu = [
     { 
       key: "settings" as SidebarPage, 
-      label: "Cài đặt", 
+      label: t("sidebar.settings"), 
       icon: (
         <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
           <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.1a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
@@ -212,7 +211,7 @@ export default function FinanceSidebar({
                 </svg>
               </span>
             </Icon>
-            <span className="truncate text-left">Đăng xuất</span>
+            <span className="truncate text-left">{t("sidebar.logout")}</span>
           </button>
         </div>
       </div>

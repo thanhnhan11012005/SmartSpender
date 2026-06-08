@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { formatVND } from "../../utils/currency";
+import { useFormat } from "../../utils/useFormat";
+import { useTranslation } from "../../hooks/useTranslation";
 
 // ========== TYPES ==========
 interface Category {
@@ -110,6 +111,8 @@ export default function TransactionHistory() {
   const [isTypeDropdownOpen, setIsTypeDropdownOpen] = useState(false);
   const [isDateDropdownOpen, setIsDateDropdownOpen] = useState(false);
   const [actionMenu, setActionMenu] = useState<ActionMenuState>({ open: false, transactionId: null });
+  const { formatCurrency, formatDate } = useFormat();
+  const { t } = useTranslation();
 
   // Data state
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -354,14 +357,14 @@ export default function TransactionHistory() {
 
   // ========== RENDER ==========
   const typeOptions = [
-    { value: "all", label: "Tất cả" },
-    { value: "income", label: "Thu nhập" },
-    { value: "expense", label: "Chi tiêu" },
+    { value: "all", label: t("history.typeAll") },
+    { value: "income", label: t("history.typeIncome") },
+    { value: "expense", label: t("history.typeExpense") },
   ];
 
   const dateOptions = [
-    { value: "thisMonth", label: "Tháng này" },
-    { value: "lastMonth", label: "Tháng trước" },
+    { value: "thisMonth", label: t("history.dateThisMonth") },
+    { value: "lastMonth", label: t("history.dateLastMonth") },
   ];
 
   return (
@@ -370,7 +373,7 @@ export default function TransactionHistory() {
         {/* Header */}
         <div className="w-full flex items-center justify-between">
           <h3 className="font-['Inter:Semi_Bold',sans-serif] font-bold leading-[28px] text-[20px] text-black">
-            Lịch sử giao dịch
+            {t("history.title")}
           </h3>
           <button
             onClick={openCreateModal}
@@ -379,7 +382,7 @@ export default function TransactionHistory() {
             <svg className="size-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path d="M12 4v16m8-8H4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
-            Thêm giao dịch
+            {t("history.addBtn")}
           </button>
         </div>
 
@@ -398,7 +401,7 @@ export default function TransactionHistory() {
             </svg>
             <input
               type="text"
-              placeholder="Tìm kiếm giao dịch..."
+              placeholder={t("history.searchPlaceholder")}
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
@@ -475,7 +478,7 @@ export default function TransactionHistory() {
 
         {/* Result count */}
         <div className="text-[12px] text-[rgba(0,0,0,0.5)]">
-          {isLoading ? "Đang tải..." : `Tìm thấy ${transactions.length} giao dịch`}
+          {isLoading ? t("history.loading") : t("history.foundTransactions", { count: transactions.length.toString() })}
         </div>
 
         {/* Table */}
@@ -483,11 +486,11 @@ export default function TransactionHistory() {
           <table className="w-full text-left text-[14px]">
             <thead>
               <tr className="text-[12px] text-[rgba(0,0,0,0.6)] border-b border-[rgba(0,0,0,0.06)]">
-                <th className="pb-[12px] font-medium">Tên</th>
-                <th className="pb-[12px] font-medium">Danh mục</th>
-                <th className="pb-[12px] font-medium hidden sm:table-cell">Ngày</th>
-                <th className="pb-[12px] font-medium text-right">Số tiền</th>
-                <th className="pb-[12px] font-medium text-right w-[50px]">Hành động</th>
+                <th className="pb-[12px] font-medium">{t("history.colName")}</th>
+                <th className="pb-[12px] font-medium">{t("history.colCategory")}</th>
+                <th className="pb-[12px] font-medium hidden sm:table-cell">{t("history.colDate")}</th>
+                <th className="pb-[12px] font-medium text-right">{t("history.colAmount")}</th>
+                <th className="pb-[12px] font-medium text-right w-[50px]">{t("history.colAction")}</th>
               </tr>
             </thead>
             <tbody>
@@ -518,7 +521,7 @@ export default function TransactionHistory() {
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="font-medium text-black truncate">{txn.description || "Giao dịch không tên"}</div>
+                          <div className="font-medium text-black truncate">{txn.description || t("history.noName")}</div>
                           {txn.location && (
                             <div className="text-xs text-[rgba(0,0,0,0.4)] truncate">{txn.location}</div>
                           )}
@@ -529,7 +532,7 @@ export default function TransactionHistory() {
                       <div className="truncate">{txn.category?.name || "—"}</div>
                     </td>
                     <td className="py-[12px] text-[14px] text-[rgba(0,0,0,0.6)] hidden sm:table-cell">
-                      {new Date(txn.transactionDate).toLocaleDateString("vi-VN")}
+                      {formatDate(txn.transactionDate)}
                     </td>
                     <td
                       className={`py-[12px] text-[14px] font-semibold text-right ${
@@ -541,7 +544,7 @@ export default function TransactionHistory() {
                       }`}
                     >
                       {txn.type === "income" ? "+" : txn.type === "expense" ? "-" : ""}
-                      {formatVND(Math.abs(txn.amount))}
+                      {formatCurrency(Math.abs(txn.amount))}
                     </td>
                     <td className="py-[12px] text-right">
                       <div className="relative inline-block">
@@ -570,7 +573,7 @@ export default function TransactionHistory() {
                               <svg className="size-[16px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                               </svg>
-                              Sửa
+                              {t("history.editBtn")}
                             </button>
                             <button
                               onClick={() => handleDelete(txn.id)}
@@ -579,7 +582,7 @@ export default function TransactionHistory() {
                               <svg className="size-[16px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                               </svg>
-                              Xóa
+                              {t("history.deleteBtn")}
                             </button>
                           </div>
                         )}
@@ -590,7 +593,7 @@ export default function TransactionHistory() {
               ) : (
                 <tr>
                   <td colSpan={5} className="py-[24px] text-center text-[14px] text-[rgba(0,0,0,0.4)]">
-                    Không tìm thấy giao dịch nào
+                    {t("history.noTransactionsFound")}
                   </td>
                 </tr>
               )}
@@ -611,7 +614,7 @@ export default function TransactionHistory() {
                     : "bg-[rgba(0,0,0,0.02)] text-black hover:bg-[rgba(0,0,0,0.04)]"
                 }`}
               >
-                ← Trước
+                {t("history.prevBtn")}
               </button>
 
               <div className="flex items-center gap-[4px]">
@@ -646,11 +649,11 @@ export default function TransactionHistory() {
                     : "bg-[rgba(0,0,0,0.02)] text-black hover:bg-[rgba(0,0,0,0.04)]"
                 }`}
               >
-                Sau →
+                {t("history.nextBtn")}
               </button>
             </div>
             <div className="w-full text-center text-[12px] text-[rgba(0,0,0,0.4)]">
-              Trang {currentPage} / {totalPages}
+              {t("history.pageInfo", { current: currentPage.toString(), total: totalPages.toString() })}
             </div>
           </>
         )}
@@ -669,10 +672,10 @@ export default function TransactionHistory() {
             <div className="flex items-start justify-between mb-6">
               <div>
                 <h3 className="text-xl font-semibold text-gray-900">
-                  {editingId !== null ? "Chỉnh sửa giao dịch" : "Thêm giao dịch mới"}
+                  {editingId !== null ? t("history.modalEditTitle") : t("history.modalCreateTitle")}
                 </h3>
                 <p className="mt-1 text-sm text-gray-500">
-                  {editingId !== null ? "Cập nhật thông tin giao dịch" : "Tạo một giao dịch mới"}
+                  {editingId !== null ? t("history.modalEditDesc") : t("history.modalCreateDesc")}
                 </p>
               </div>
               <button
@@ -689,34 +692,34 @@ export default function TransactionHistory() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* Description */}
                 <label className="sm:col-span-2">
-                  <span className="text-sm font-medium text-gray-700">Nội dung</span>
+                  <span className="text-sm font-medium text-gray-700">{t("history.formContent")}</span>
                   <input
                     type="text"
                     value={form.description}
                     onChange={(e) => setForm({ ...form, description: e.target.value })}
                     className="mt-1 block w-full rounded-xl border border-gray-200 px-4 py-3 text-sm focus:border-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-100"
-                    placeholder="Ví dụ: Ăn cơm, Dạy kèm..."
+                    placeholder={t("history.formContentPlaceholder")}
                     required
                   />
                 </label>
 
                 {/* Type */}
                 <label>
-                  <span className="text-sm font-medium text-gray-700">Loại</span>
+                  <span className="text-sm font-medium text-gray-700">{t("history.formType")}</span>
                   <select
                     value={form.type}
                     onChange={(e) => setForm({ ...form, type: e.target.value as any })}
                     className="mt-1 block w-full rounded-xl border border-gray-200 px-4 py-3 text-sm focus:border-purple-300 focus:outline-none"
                   >
-                    <option value="expense">Chi tiêu</option>
-                    <option value="income">Thu nhập</option>
-                    <option value="transfer">Chuyển tiền</option>
+                    <option value="expense">{t("history.typeExpense")}</option>
+                    <option value="income">{t("history.typeIncome")}</option>
+                    <option value="transfer">{t("history.formTypeTransfer")}</option>
                   </select>
                 </label>
 
                 {/* Amount */}
                 <label>
-                  <span className="text-sm font-medium text-gray-700">Số tiền</span>
+                  <span className="text-sm font-medium text-gray-700">{t("history.formAmount")}</span>
                   <input
                     type="text"
                     inputMode="numeric"
@@ -730,14 +733,14 @@ export default function TransactionHistory() {
 
                 {/* Wallet */}
                 <label>
-                  <span className="text-sm font-medium text-gray-700">Ví</span>
+                  <span className="text-sm font-medium text-gray-700">{t("history.formWallet")}</span>
                   <select
                     value={form.walletId}
                     onChange={(e) => setForm({ ...form, walletId: e.target.value })}
                     className="mt-1 block w-full rounded-xl border border-gray-200 px-4 py-3 text-sm focus:border-purple-300 focus:outline-none"
                     required
                   >
-                    <option value="">Chọn ví</option>
+                    <option value="">{t("history.formSelectWallet")}</option>
                     {wallets.map((w) => (
                       <option key={w.id} value={String(w.id)}>
                         {w.name}
@@ -748,13 +751,13 @@ export default function TransactionHistory() {
 
                 {/* Category */}
                 <label>
-                  <span className="text-sm font-medium text-gray-700">Danh mục</span>
+                  <span className="text-sm font-medium text-gray-700">{t("history.formCategory")}</span>
                   <select
                     value={form.categoryId}
                     onChange={(e) => setForm({ ...form, categoryId: e.target.value })}
                     className="mt-1 block w-full rounded-xl border border-gray-200 px-4 py-3 text-sm focus:border-purple-300 focus:outline-none"
                   >
-                    <option value="">Không chọn danh mục</option>
+                    <option value="">{t("history.formNoCategory")}</option>
                     {categories.map((c) => (
                       <option key={c.id} value={String(c.id)}>
                         {c.name}
@@ -765,7 +768,7 @@ export default function TransactionHistory() {
 
                 {/* Date */}
                 <label>
-                  <span className="text-sm font-medium text-gray-700">Ngày giao dịch</span>
+                  <span className="text-sm font-medium text-gray-700">{t("history.formDate")}</span>
                   <input
                     type="date"
                     value={form.transactionDate}
@@ -777,13 +780,13 @@ export default function TransactionHistory() {
 
                 {/* Location */}
                 <label className="sm:col-span-2">
-                  <span className="text-sm font-medium text-gray-700">Địa điểm (tuỳ chọn)</span>
+                  <span className="text-sm font-medium text-gray-700">{t("history.formLocation")}</span>
                   <input
                     type="text"
                     value={form.location}
                     onChange={(e) => setForm({ ...form, location: e.target.value })}
                     className="mt-1 block w-full rounded-xl border border-gray-200 px-4 py-3 text-sm focus:border-purple-300 focus:outline-none"
-                    placeholder="Ví dụ: Quán cơm Tây Hồ..."
+                    placeholder={t("history.formLocationPlaceholder")}
                   />
                 </label>
               </div>
@@ -795,14 +798,14 @@ export default function TransactionHistory() {
                   onClick={closeModal}
                   className="rounded-xl border border-gray-200 px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50"
                 >
-                  Hủy
+                  {t("history.formCancelBtn")}
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
                   className="rounded-xl bg-purple-600 px-5 py-3 text-sm font-semibold text-white hover:bg-purple-700 disabled:opacity-70"
                 >
-                  {isSubmitting ? "Đang lưu..." : editingId !== null ? "Cập nhật" : "Tạo mới"}
+                  {isSubmitting ? t("history.formSaving") : editingId !== null ? t("history.formSubmitEdit") : t("history.formSubmitCreate")}
                 </button>
               </div>
             </form>

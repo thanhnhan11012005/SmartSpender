@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import imgAvatarByewind from "../../imports/Sidebar/5d1e58c8086fe7ad86b64a6151f47a2a2aa8357a.png";
+import { useTranslation } from "../../hooks/useTranslation";
 
 type SettingsTab = "profile" | "preferences" | "notifications" | "data";
 
@@ -11,6 +12,7 @@ const timePeriods = [
 ];
 
 export default function SettingsPage() {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<SettingsTab>("profile");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [avatarStorageKey, setAvatarStorageKey] = useState<string | null>(null);
@@ -25,7 +27,7 @@ export default function SettingsPage() {
   const [profileError, setProfileError] = useState<string | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [pendingAvatar, setPendingAvatar] = useState<string | null>(null);
-  const [currency, setCurrency] = useState("VND");
+  const [language, setLanguage] = useState("vi");
   const [dateFormat, setDateFormat] = useState("DD/MM/YYYY");
   const [smsAlert, setSmsAlert] = useState(true);
   const [weeklyReport, setWeeklyReport] = useState(false);
@@ -60,7 +62,6 @@ export default function SettingsPage() {
         }
 
         const user = await response.json();
-        const storedAvatar = nextAvatarKey ? localStorage.getItem(nextAvatarKey) : null;
 
         setProfile({
           name: user.name ?? "",
@@ -68,8 +69,9 @@ export default function SettingsPage() {
           email: user.email ?? "",
           address: user.address ?? "",
         });
-        setAvatarStorageKey(nextAvatarKey);
-        setAvatarPreview(storedAvatar);
+        setLanguage(user.language ?? "vi");
+        setDateFormat(user.dateFormat ?? "DD/MM/YYYY");
+        setAvatarPreview(user.avatarUrl ?? null);
       } catch (error: any) {
         setProfileError(error?.message ?? "Không thể tải hồ sơ.");
       } finally {
@@ -82,25 +84,25 @@ export default function SettingsPage() {
 
   const settingsMenu = useMemo(
     () => [
-      { key: "profile" as const, label: "Hồ sơ cá nhân" },
-      { key: "preferences" as const, label: "Tùy chọn" },
-      { key: "notifications" as const, label: "Thông báo" },
-      { key: "data" as const, label: "Dữ liệu" },
+      { key: "profile" as const, label: t("settings.profile") },
+      { key: "preferences" as const, label: t("settings.preferences") },
+      { key: "notifications" as const, label: t("settings.notifications") },
+      { key: "data" as const, label: t("settings.data") },
     ],
-    []
+    [t]
   );
 
   const handleExport = () => {
     const rows = [
       ["Loai", "Gia tri"],
       ["Ky xuat", exportPeriod],
-      ["Tien te", currency],
+      ["Ngon ngu", language],
       ["Dang ngay", dateFormat],
       ["SMS canh bao", smsAlert ? "Bat" : "Tat"],
       ["Bao cao AI hang tuan", weeklyReport ? "Bat" : "Tat"],
     ];
 
-    const csv = rows.map((row) => row.map((cell) => `"${String(cell).replaceAll('"', '""')}"`).join(",")).join("\n");
+    const csv = rows.map((row) => row.map((cell) => `"${String(cell).replace(/\"/g, '""')}"`).join(",")).join("\n");
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -151,7 +153,12 @@ export default function SettingsPage() {
       const response = await fetch(`/api/users/${userId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(profile),
+        body: JSON.stringify({
+          ...profile,
+          avatarUrl: pendingAvatar || avatarPreview,
+          language,
+          dateFormat
+        }),
       });
 
       if (!response.ok) {
@@ -162,11 +169,7 @@ export default function SettingsPage() {
       const updatedUser = await response.json();
       localStorage.setItem("user", JSON.stringify(updatedUser));
 
-      const nextAvatarKey = `userAvatar:${updatedUser.id ?? userId}`;
-      setAvatarStorageKey(nextAvatarKey);
-
       if (pendingAvatar) {
-        localStorage.setItem(nextAvatarKey, pendingAvatar);
         setPendingAvatar(null);
       }
 
@@ -195,7 +198,7 @@ export default function SettingsPage() {
   return (
     <div className="grid gap-6 lg:grid-cols-[260px_minmax(0,1fr)]">
       <aside className="rounded-2xl bg-white p-3 shadow-sm">
-        <div className="mb-3 px-3 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-[rgba(0,0,0,0.45)]">Cài đặt</div>
+        <div className="mb-3 px-3 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-[rgba(0,0,0,0.45)]">{t("settings.title")}</div>
         <nav className="space-y-1">
           {settingsMenu.map((item) => {
             const active = activeTab === item.key;
@@ -219,8 +222,8 @@ export default function SettingsPage() {
         {activeTab === "profile" && (
           <div className="space-y-6">
             <div>
-              <h1 className="text-2xl font-bold text-black">Hồ sơ cá nhân</h1>
-              <p className="mt-1 text-sm text-[rgba(0,0,0,0.55)]">Cập nhật thông tin tài khoản của bạn.</p>
+              <h1 className="text-2xl font-bold text-black">{t("settings.profile.title")}</h1>
+              <p className="mt-1 text-sm text-[rgba(0,0,0,0.55)]">{t("settings.profile.desc")}</p>
             </div>
 
             {profileError ? (
@@ -236,17 +239,17 @@ export default function SettingsPage() {
                 </div>
                 <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
                 <button type="button" onClick={openAvatarPicker} className="rounded-full bg-[#8b5cf6] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#7c3aed]">
-                  Tải ảnh đại diện
+                  {t("settings.profile.uploadAvatar")}
                 </button>
-                <p className="text-xs text-[rgba(0,0,0,0.45)]">PNG, JPG. Tối đa 2MB.</p>
+                <p className="text-xs text-[rgba(0,0,0,0.45)]">{t("settings.profile.avatarInfo")}</p>
               </div>
 
               <div className="grid flex-1 gap-4">
                 {[
-                  { label: "Họ tên", value: profile.name, key: "name" as const },
-                  { label: "Số điện thoại", value: profile.phone, key: "phone" as const },
-                  { label: "Email", value: profile.email, key: "email" as const },
-                  { label: "Địa chỉ", value: profile.address, key: "address" as const },
+                  { label: t("settings.profile.fullname"), value: profile.name, key: "name" as const },
+                  { label: t("settings.profile.phone"), value: profile.phone, key: "phone" as const },
+                  { label: t("settings.profile.email"), value: profile.email, key: "email" as const },
+                  { label: t("settings.profile.address"), value: profile.address, key: "address" as const },
                 ].map((field) => (
                   <label key={field.key} className="grid gap-2">
                     <span className="text-sm font-medium text-[rgba(0,0,0,0.72)]">{field.label}</span>
@@ -267,7 +270,7 @@ export default function SettingsPage() {
                     disabled={loadingProfile || savingProfile}
                     className="rounded-xl bg-[#8b5cf6] px-5 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#7c3aed] disabled:opacity-60"
                   >
-                    {loadingProfile ? "Đang tải hồ sơ..." : savingProfile ? "Đang lưu..." : "Lưu thay đổi"}
+                    {loadingProfile ? t("settings.profile.loading") : savingProfile ? t("settings.profile.saving") : t("settings.profile.save")}
                   </button>
                 </div>
               </div>
@@ -278,25 +281,25 @@ export default function SettingsPage() {
         {activeTab === "preferences" && (
           <div className="space-y-6">
             <div>
-              <h1 className="text-2xl font-bold text-black">Tùy chọn</h1>
-              <p className="mt-1 text-sm text-[rgba(0,0,0,0.55)]">Chọn tiền tệ và định dạng hiển thị phù hợp.</p>
+              <h1 className="text-2xl font-bold text-black">{t("settings.pref.title")}</h1>
+              <p className="mt-1 text-sm text-[rgba(0,0,0,0.55)]">{t("settings.pref.desc")}</p>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="grid gap-2">
-                <span className="text-sm font-medium text-[rgba(0,0,0,0.72)]">Tiền tệ</span>
+                <span className="text-sm font-medium text-[rgba(0,0,0,0.72)]">{t("settings.pref.language")}</span>
                 <select
-                  value={currency}
-                  onChange={(e) => setCurrency(e.target.value)}
+                  value={language}
+                  onChange={(e) => setLanguage(e.target.value)}
                   className="h-12 rounded-xl border border-[rgba(0,0,0,0.08)] bg-white px-4 text-[14px] outline-none transition-colors focus:border-[#8b5cf6]"
                 >
-                  <option value="VND">VND</option>
-                  <option value="USD">USD</option>
+                  <option value="vi">{t("settings.pref.lang.vi")}</option>
+                  <option value="en">{t("settings.pref.lang.en")}</option>
                 </select>
               </label>
 
               <label className="grid gap-2">
-                <span className="text-sm font-medium text-[rgba(0,0,0,0.72)]">Định dạng ngày tháng</span>
+                <span className="text-sm font-medium text-[rgba(0,0,0,0.72)]">{t("settings.pref.dateFormat")}</span>
                 <select
                   value={dateFormat}
                   onChange={(e) => setDateFormat(e.target.value)}
@@ -308,29 +311,39 @@ export default function SettingsPage() {
                 </select>
               </label>
             </div>
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={saveProfile}
+                disabled={loadingProfile || savingProfile}
+                className="rounded-xl bg-[#8b5cf6] px-5 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#7c3aed] disabled:opacity-60"
+              >
+                {savingProfile ? t("settings.profile.saving") : t("settings.profile.save")}
+              </button>
+            </div>
           </div>
         )}
 
         {activeTab === "notifications" && (
           <div className="space-y-6">
             <div>
-              <h1 className="text-2xl font-bold text-black">Thông báo</h1>
-              <p className="mt-1 text-sm text-[rgba(0,0,0,0.55)]">Bật tắt các cảnh báo quan trọng.</p>
+              <h1 className="text-2xl font-bold text-black">{t("settings.notif.title")}</h1>
+              <p className="mt-1 text-sm text-[rgba(0,0,0,0.55)]">{t("settings.notif.desc")}</p>
             </div>
 
             <div className="space-y-4">
               <div className="flex items-center justify-between rounded-2xl border border-[rgba(0,0,0,0.06)] bg-[rgba(0,0,0,0.02)] p-4">
                 <div>
-                  <p className="font-medium text-black">Cảnh báo vượt ngân sách qua SMS</p>
-                  <p className="text-sm text-[rgba(0,0,0,0.5)]">Nhận tin nhắn khi chi tiêu vượt mức cho phép.</p>
+                  <p className="font-medium text-black">{t("settings.notif.sms.title")}</p>
+                  <p className="text-sm text-[rgba(0,0,0,0.5)]">{t("settings.notif.sms.desc")}</p>
                 </div>
                 <Toggle enabled={smsAlert} onChange={setSmsAlert} />
               </div>
 
               <div className="flex items-center justify-between rounded-2xl border border-[rgba(0,0,0,0.06)] bg-[rgba(0,0,0,0.02)] p-4">
                 <div>
-                  <p className="font-medium text-black">Nhận email báo cáo AI hàng tuần</p>
-                  <p className="text-sm text-[rgba(0,0,0,0.5)]">Tóm tắt thông minh về xu hướng chi tiêu mỗi tuần.</p>
+                  <p className="font-medium text-black">{t("settings.notif.email.title")}</p>
+                  <p className="text-sm text-[rgba(0,0,0,0.5)]">{t("settings.notif.email.desc")}</p>
                 </div>
                 <Toggle enabled={weeklyReport} onChange={setWeeklyReport} />
               </div>
@@ -341,14 +354,14 @@ export default function SettingsPage() {
         {activeTab === "data" && (
           <div className="space-y-6">
             <div>
-              <h1 className="text-2xl font-bold text-black">Dữ liệu</h1>
-              <p className="mt-1 text-sm text-[rgba(0,0,0,0.55)]">Xuất dữ liệu trước khi tải và thao tác ở khu vực nguy hiểm.</p>
+              <h1 className="text-2xl font-bold text-black">{t("settings.data.title")}</h1>
+              <p className="mt-1 text-sm text-[rgba(0,0,0,0.55)]">{t("settings.data.desc")}</p>
             </div>
 
             <div className="rounded-2xl border border-[rgba(0,0,0,0.06)] bg-[rgba(0,0,0,0.02)] p-4">
               <div className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
                 <label className="grid gap-2">
-                  <span className="text-sm font-medium text-[rgba(0,0,0,0.72)]">Khoảng thời gian xuất dữ liệu</span>
+                  <span className="text-sm font-medium text-[rgba(0,0,0,0.72)]">{t("settings.data.period")}</span>
                   <select
                     value={exportPeriod}
                     onChange={(e) => setExportPeriod(e.target.value)}
@@ -370,22 +383,22 @@ export default function SettingsPage() {
                   <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v12m0 0l-4-4m4 4l4-4M4 20h16" />
                   </svg>
-                  Xuất dữ liệu Excel
+                  {t("settings.data.export")}
                 </button>
               </div>
             </div>
 
             <div className="rounded-2xl border border-red-100 bg-red-50 p-5">
-              <h2 className="text-lg font-bold text-red-700">Khu vực nguy hiểm</h2>
+              <h2 className="text-lg font-bold text-red-700">{t("settings.data.dangerZone")}</h2>
               <p className="mt-1 text-sm text-red-600/80">
-                Hành động này không thể hoàn tác. Hãy chắc chắn trước khi thực hiện.
+                {t("settings.data.dangerDesc")}
               </p>
               <div className="mt-4">
                 <button
                   type="button"
                   className="rounded-xl bg-red-600 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-red-700"
                 >
-                  Xóa tài khoản vĩnh viễn
+                  {t("settings.data.deleteAccount")}
                 </button>
               </div>
             </div>

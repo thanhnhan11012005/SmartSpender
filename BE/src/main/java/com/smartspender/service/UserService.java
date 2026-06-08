@@ -95,6 +95,15 @@ public class UserService {
         if (userDTO.getAddress() != null) {
             user.setAddress(userDTO.getAddress());
         }
+        if (userDTO.getAvatarUrl() != null) {
+            user.setAvatarUrl(userDTO.getAvatarUrl());
+        }
+        if (userDTO.getLanguage() != null) {
+            user.setLanguage(userDTO.getLanguage());
+        }
+        if (userDTO.getDateFormat() != null) {
+            user.setDateFormat(userDTO.getDateFormat());
+        }
 
         User updatedUser = userRepository.save(user);
         log.info("User updated successfully with id: {}", userId);
@@ -121,6 +130,9 @@ public class UserService {
                 .email(user.getEmail())
                 .phone(user.getPhone())
                 .address(user.getAddress())
+                .avatarUrl(user.getAvatarUrl())
+                .language(user.getLanguage())
+                .dateFormat(user.getDateFormat())
                 .createdAt(user.getCreatedAt() != null ? user.getCreatedAt().toString() : null)
                 .build();
     }

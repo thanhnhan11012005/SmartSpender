@@ -1,7 +1,8 @@
 import { useMemo, useState, useRef, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { formatVND } from "../../utils/currency";
+import { useFormat } from "../../utils/useFormat";
+import { useTranslation } from "../../hooks/useTranslation";
 
 type InsightTone = "warning" | "tip" | "success";
 
@@ -65,6 +66,8 @@ const toneStyle: Record<InsightTone, { border: string; glow: string; icon: strin
 };
 
 export default function AIInsights() {
+  const { formatCurrency } = useFormat();
+  const { t } = useTranslation();
   const [draft, setDraft] = useState("");
   // 2. Thêm state để lưu trữ ảnh đang được chọn (xem trước)
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -110,7 +113,7 @@ export default function AIInsights() {
   async function fetchContext() {
     const raw = localStorage.getItem("user");
     if (!raw) {
-      throw new Error("Vui lòng đăng nhập để dùng trợ lý AI.");
+      throw new Error(t("ai.errorLogin"));
     }
 
     let userId: number | null = null;
@@ -122,7 +125,7 @@ export default function AIInsights() {
     }
 
     if (!userId) {
-      throw new Error("Không tìm thấy userId hợp lệ.");
+      throw new Error(t("ai.errorUserId"));
     }
 
     const [budgetResp, categoryResp] = await Promise.all([
@@ -131,7 +134,7 @@ export default function AIInsights() {
     ]);
 
     if (!budgetResp.ok || !categoryResp.ok) {
-      throw new Error("Không thể tải ngữ cảnh ngân sách/danh mục.");
+      throw new Error(t("ai.errorFetch"));
     }
 
     const budgets = (await budgetResp.json()) as BudgetContextItem[];
@@ -194,7 +197,7 @@ export default function AIInsights() {
       const fallback: Message = {
         id: nextId + 1,
         role: "ai",
-        text: "Tôi chưa thể xử lý yêu cầu lúc này. Bạn thử lại trong giây lát nhé.",
+        text: t("ai.errorProcess"),
       };
       setMessages((prev) => [...prev, fallback]);
       console.error(error);
@@ -245,7 +248,7 @@ export default function AIInsights() {
               setMessages(history);
           } else {
               // set welcome bubble
-              const welcomeText = `Xin chào! Hôm nay bạn đã chi ${formatVND(totalSpent)} và còn lại ${formatVND(totalRemaining)} trong các ngân sách hiện tại. Bạn muốn tôi phân tích mục nào trước hoặc có hóa đơn nào cần tôi quét không?`;
+              const welcomeText = t("ai.welcome", { spent: formatCurrency(totalSpent), remaining: formatCurrency(totalRemaining) });
               setMessages([
                 {
                   id: 1,
@@ -262,8 +265,8 @@ export default function AIInsights() {
           if (over) {
             cards.push({
               id: 1,
-              title: `Cảnh báo: ${over.categoryName}`,
-              description: `Bạn đã dùng ${Math.round(((over.spentAmount||0)/(over.limitAmount||1))*100)}% hạn mức ${over.categoryName}. Cần xem lại chi tiêu để tránh vượt ngân sách.`,
+              title: t("ai.warnTitle", { category: over.categoryName }),
+              description: t("ai.warnDesc", { percent: Math.round(((over.spentAmount||0)/(over.limitAmount||1))*100).toString(), category: over.categoryName }),
               tone: "warning",
             });
           }
@@ -272,8 +275,8 @@ export default function AIInsights() {
           if (categories && categories.length > 2) {
             cards.push({
               id: cards.length + 1,
-              title: "Lời khuyên tiết kiệm",
-              description: "Thử lập thực đơn nấu tại nhà 2-3 lần/tuần để giảm chi tiêu ăn ngoài.",
+              title: t("ai.tipTitle"),
+              description: t("ai.tipDesc"),
               tone: "tip",
             });
           }
@@ -282,21 +285,21 @@ export default function AIInsights() {
           if (totalRemaining > 0) {
             cards.push({
               id: cards.length + 1,
-              title: "Tiến bộ tiết kiệm",
-              description: `Bạn còn ${formatVND(totalRemaining)} trong ngân sách - tiếp tục giữ vững nhé!`,
+              title: t("ai.successTitle"),
+              description: t("ai.successDesc", { remaining: formatCurrency(totalRemaining) }),
               tone: "success",
             });
           }
 
           setInsightCards(cards.length ? cards : [
-            { id: 1, title: "Không có thông báo", description: "Không phát hiện vấn đề đặc biệt trong ngân sách của bạn.", tone: "success" }
+            { id: 1, title: t("ai.noWarnTitle"), description: t("ai.noWarnDesc"), tone: "success" }
           ]);
 
           // quick prompts derived
           setQuickPromptsState([
-            "Phân tích chi tiêu tháng này",
-            "Dự báo số dư cuối tháng",
-            "Gợi ý cắt giảm chi phí",
+            t("ai.prompt1"),
+            t("ai.prompt2"),
+            t("ai.prompt3"),
           ]);
         }
       } catch (err) {
@@ -307,17 +310,17 @@ export default function AIInsights() {
     void loadContextAndWelcome();
 
     return () => { mounted = false; };
-  }, []);
+  }, [formatCurrency]);
 
   return (
     <div className="space-y-6">
       <div className="bg-white rounded-[20px] p-6 shadow-sm">
         <h1 className="text-[30px] leading-[36px] font-bold text-black flex items-center gap-2">
           <span className="text-[26px]">✨</span>
-          Trợ lý AI của bạn
+          {t("ai.title")}
         </h1>
         <p className="mt-2 text-[14px] text-[rgba(0,0,0,0.58)]">
-          Dựa trên dữ liệu thu chi, đây là những phân tích dành riêng cho bạn hôm nay.
+          {t("ai.desc")}
         </p>
       </div>
 
@@ -419,7 +422,7 @@ export default function AIInsights() {
             disabled={isLoading}
             onClick={() => fileInputRef.current?.click()}
             className="h-12 w-12 shrink-0 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-600 flex items-center justify-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            title="Tải ảnh hóa đơn lên"
+            title={t("ai.uploadTitle")}
           >
             <svg className="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -435,7 +438,7 @@ export default function AIInsights() {
                 void sendMessage(draft, selectedImage);
               }
             }}
-            placeholder={selectedImage ? "Thêm ghi chú cho hóa đơn này..." : "Hỏi AI hoặc đính kèm hóa đơn..."}
+            placeholder={selectedImage ? t("ai.placeholderImage") : t("ai.placeholder")}
             className="w-full h-12 rounded-xl border border-[rgba(0,0,0,0.08)] bg-white px-4 text-[14px] placeholder:text-[rgba(0,0,0,0.4)] focus:outline-none focus:ring-2 focus:ring-[#8b5cf6]/25 focus:border-[#8b5cf6] disabled:bg-gray-50 disabled:text-gray-400"
           />
           <button
