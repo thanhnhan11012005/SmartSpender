@@ -13,6 +13,7 @@ import Budget from "./components/Budget";
 import AIInsights from "./components/AIInsights";
 import SettingsPage from "./components/SettingsPage";
 import Overview from "./components/Overview";
+import NotificationBell from "./components/NotificationBell";
 
 export default function App() {
   const [leftSidebarOpen, setLeftSidebarOpen] = useState(false);
@@ -40,6 +41,11 @@ export default function App() {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
         </svg>
       </button>
+
+      {/* Global Notification Bell - Top Right */}
+      <div className="fixed right-4 top-4 z-50">
+        <NotificationBell />
+      </div>
 
 
       {/* Overlay for mobile */}

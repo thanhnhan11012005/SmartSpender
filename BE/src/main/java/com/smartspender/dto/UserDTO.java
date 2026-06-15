@@ -39,4 +39,8 @@ public class UserDTO {
 
     @Size(max = 20, message = "Date format must not exceed 20 characters")
     private String dateFormat;
+
+    private Boolean smsAlert;
+
+    private Boolean weeklyReport;
 }

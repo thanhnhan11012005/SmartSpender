@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 export function useFormat() {
   const [language, setLanguage] = useState<string>("vi");
@@ -29,7 +29,7 @@ export function useFormat() {
     };
   }, []);
 
-  const formatCurrency = (amount: number | string | null | undefined): string => {
+  const formatCurrency = useCallback((amount: number | string | null | undefined): string => {
     if (amount === null || amount === undefined) return "";
     const val = typeof amount === "string" ? parseFloat(amount) : amount;
     if (isNaN(val)) return "";
@@ -47,9 +47,9 @@ export function useFormat() {
     } else {
       return new Intl.NumberFormat("vi-VN").format(displayVal) + " đ";
     }
-  };
+  }, [currency]);
 
-  const formatDate = (dateString: string | null | undefined): string => {
+  const formatDate = useCallback((dateString: string | null | undefined): string => {
     if (!dateString) return "";
     const d = new Date(dateString);
     if (isNaN(d.getTime())) return dateString; // fallback
@@ -61,7 +61,7 @@ export function useFormat() {
     if (dateFormat === "MM/DD/YYYY") return `${month}/${day}/${year}`;
     if (dateFormat === "YYYY-MM-DD") return `${year}-${month}-${day}`;
     return `${day}/${month}/${year}`; // default DD/MM/YYYY
-  };
+  }, [dateFormat]);
 
   return { formatCurrency, formatDate, currency, language, dateFormat };
 }

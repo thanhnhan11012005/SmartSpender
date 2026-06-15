@@ -72,6 +72,8 @@ export default function SettingsPage() {
         setLanguage(user.language ?? "vi");
         setDateFormat(user.dateFormat ?? "DD/MM/YYYY");
         setAvatarPreview(user.avatarUrl ?? null);
+        setSmsAlert(user.smsAlert ?? false);
+        setWeeklyReport(user.weeklyReport ?? false);
       } catch (error: any) {
         setProfileError(error?.message ?? "Không thể tải hồ sơ.");
       } finally {
@@ -157,7 +159,9 @@ export default function SettingsPage() {
           ...profile,
           avatarUrl: pendingAvatar || avatarPreview,
           language,
-          dateFormat
+          dateFormat,
+          smsAlert,
+          weeklyReport
         }),
       });
 
@@ -347,6 +351,17 @@ export default function SettingsPage() {
                 </div>
                 <Toggle enabled={weeklyReport} onChange={setWeeklyReport} />
               </div>
+            </div>
+            
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={saveProfile}
+                disabled={loadingProfile || savingProfile}
+                className="rounded-xl bg-[#8b5cf6] px-5 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#7c3aed] disabled:opacity-60"
+              >
+                {savingProfile ? t("settings.profile.saving") : t("settings.profile.save")}
+              </button>
             </div>
           </div>
         )}

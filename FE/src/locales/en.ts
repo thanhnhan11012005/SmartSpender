@@ -201,6 +201,20 @@ export const en = {
   "budget.totalBudget": "TOTAL BUDGET",
   "budget.totalSpent": "TOTAL SPENT",
   "budget.remaining": "REMAINING",
+  "budget.forThisMonth": "for this month",
+  "budget.budgetPercentage": "of budget",
+  "budget.toSpend": "to spend",
+  "budget.tabOverview": "Overview",
+  "budget.tabCategories": "Categories",
+  "budget.tabMonthly": "Monthly",
+  "budget.progress": "Progress",
+  "budget.aiSafe": "AI Check: Safe budget",
+  "budget.aiWarning": "Warning: Budget is almost exhausted!",
+  "budget.aiNormal": "Normal",
+  "budget.noBudget": "You have no budgets",
+  "budget.askAI": "Ask AI",
+  "budget.categoryBreakdown": "Category Breakdown",
+  "budget.used": "used",
   "budget.add": "+ Create Budget",
 
   // AI
@@ -225,5 +239,13 @@ export const en = {
   "ai.placeholder": "Ask AI or attach a receipt...",
   "ai.placeholderImage": "Add a note for this receipt...",
   "ai.uploadTitle": "Upload receipt image",
-  "ai.input.placeholder": "Ask AI or attach receipt..."
+  "ai.input.placeholder": "Ask AI or attach receipt...",
+
+  // Notifications
+  "notification.title": "Notifications",
+  "notification.markAllRead": "Mark all as read",
+  "notification.empty": "No notifications",
+  "notification.typeSystem": "System",
+  "notification.typeBudget": "Budget",
+  "notification.typeReminder": "Reminder"
 };

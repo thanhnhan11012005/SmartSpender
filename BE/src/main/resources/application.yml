@@ -18,7 +18,7 @@ spring:
   
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: none
     show-sql: false
     properties:
       hibernate:
@@ -28,7 +28,19 @@ spring:
           batch_size: 20
         order_inserts: true
         order_updates: true
-  
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: nhanht110105@gmail.com
+    password: ntjz wvdw fwpo phvi
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
   jackson:
     default-property-inclusion: non_null
     serialization:

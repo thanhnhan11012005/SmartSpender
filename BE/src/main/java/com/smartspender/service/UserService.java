@@ -104,6 +104,12 @@ public class UserService {
         if (userDTO.getDateFormat() != null) {
             user.setDateFormat(userDTO.getDateFormat());
         }
+        if (userDTO.getSmsAlert() != null) {
+            user.setSmsAlert(userDTO.getSmsAlert());
+        }
+        if (userDTO.getWeeklyReport() != null) {
+            user.setWeeklyReport(userDTO.getWeeklyReport());
+        }
 
         User updatedUser = userRepository.save(user);
         log.info("User updated successfully with id: {}", userId);
@@ -133,6 +139,8 @@ public class UserService {
                 .avatarUrl(user.getAvatarUrl())
                 .language(user.getLanguage())
                 .dateFormat(user.getDateFormat())
+                .smsAlert(user.getSmsAlert() != null ? user.getSmsAlert() : false)
+                .weeklyReport(user.getWeeklyReport() != null ? user.getWeeklyReport() : false)
                 .createdAt(user.getCreatedAt() != null ? user.getCreatedAt().toString() : null)
                 .build();
     }
