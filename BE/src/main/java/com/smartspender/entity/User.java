@@ -45,6 +45,12 @@ public class User {
     @Column(name = "DATE_FORMAT", length = 20)
     private String dateFormat;
 
+    @Column(name = "SMS_ALERT")
+    private Boolean smsAlert;
+
+    @Column(name = "WEEKLY_REPORT")
+    private Boolean weeklyReport;
+
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Wallet> wallets;
 

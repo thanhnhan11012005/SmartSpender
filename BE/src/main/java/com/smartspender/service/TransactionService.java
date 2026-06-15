@@ -11,6 +11,8 @@ import com.smartspender.repository.CategoryRepository;
 import com.smartspender.repository.TransactionRepository;
 import com.smartspender.repository.UserRepository;
 import com.smartspender.repository.WalletRepository;
+import com.smartspender.repository.BudgetRepository;
+import com.smartspender.entity.Budget;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -31,6 +33,8 @@ public class TransactionService {
     private final UserRepository userRepository;
     private final WalletRepository walletRepository;
     private final CategoryRepository categoryRepository;
+    private final BudgetRepository budgetRepository;
+    private final NotificationService notificationService;
 
     public TransactionDTO createTransaction(TransactionDTO transactionDTO) {
         log.info("Creating transaction for wallet: {}", transactionDTO.getWalletId());
@@ -85,8 +89,41 @@ public class TransactionService {
         Transaction savedTransaction = transactionRepository.save(transaction);
         walletRepository.save(wallet); // Lưu cập nhật balance
         log.info("Transaction created successfully with id: {}", savedTransaction.getId());
+
+        // Kiểm tra cảnh báo ngân sách
+        if (type == TransactionType.EXPENSE && category != null) {
+            checkBudgetAndNotify(user, category, savedTransaction.getTransactionDate(), savedTransaction.getAmount());
+        }
         
         return convertToDTO(savedTransaction);
+    }
+
+    private void checkBudgetAndNotify(User user, Category category, LocalDate date, BigDecimal amount) {
+        List<Budget> budgets = budgetRepository.findBudgetsForDate(user.getId(), date);
+        for (Budget b : budgets) {
+            boolean isMatch = (b.getCategory() == null) || (b.getCategory().getId().equals(category.getId()));
+            if (isMatch && b.getIsAlertEnabled() != null && b.getIsAlertEnabled()) {
+                // Tính tổng chi tiêu của budget này
+                BigDecimal spentAmount = transactionRepository
+                        .findByUserIdAndDateRange(user.getId(), b.getStartDate(), b.getEndDate())
+                        .stream()
+                        .filter(t -> t.getType() == TransactionType.EXPENSE)
+                        .filter(t -> b.getCategory() == null ||
+                                (t.getCategory() != null && t.getCategory().getId().equals(b.getCategory().getId())))
+                        .map(Transaction::getAmount)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+                // Nếu tổng chi vượt ngân sách
+                if (spentAmount.compareTo(b.getAmount()) > 0) {
+                    String categoryName = b.getCategory() != null ? b.getCategory().getName() : "Tổng";
+                    String message = String.format("Bạn đã chi %s đ cho mục %s, vượt quá ngân sách đặt ra là %s đ.",
+                            String.format("%,d", spentAmount.longValue()),
+                            categoryName,
+                            String.format("%,d", b.getAmount().longValue()));
+                    notificationService.createNotification(user.getId(), "Cảnh báo vượt ngân sách", message, "BUDGET");
+                }
+            }
+        }
     }
 
     public TransactionDTO getTransactionById(Long transactionId) {

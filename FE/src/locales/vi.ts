@@ -182,6 +182,19 @@ export const vi = {
   "budget.totalBudget": "TỔNG NGÂN SÁCH",
   "budget.totalSpent": "ĐÃ CHI TIÊU",
   "budget.remaining": "CÒN LẠI",
+  "budget.forThisMonth": "cho tháng này",
+  "budget.budgetPercentage": "ngân sách",
+  "budget.toSpend": "để chi tiêu",
+  "budget.tabOverview": "Tổng quan",
+  "budget.tabCategories": "Danh mục",
+  "budget.tabMonthly": "Hàng tháng",
+  "budget.progress": "Tiến độ",
+  "budget.aiSafe": "AI đánh giá: Ngân sách an toàn",
+  "budget.aiWarning": "Cảnh báo: Ngân sách sắp cạn kiệt!",
+  "budget.aiNormal": "Bình thường",
+  "budget.noBudget": "Bạn chưa có ngân sách nào",
+  "budget.askAI": "Hỏi AI",
+  "budget.categoryBreakdown": "Chi tiết danh mục",
   "budget.used": "sử dụng",
   "budget.edit": "Sửa",
   "budget.delete": "Xóa",
@@ -226,4 +239,12 @@ export const vi = {
   "ai.placeholderImage": "Thêm ghi chú cho hóa đơn này...",
   "ai.uploadTitle": "Tải ảnh hóa đơn lên",
   "ai.input.placeholder": "Hỏi AI hoặc đính kèm hóa đơn...",
+
+  // Notifications
+  "notification.title": "Thông báo",
+  "notification.markAllRead": "Đánh dấu tất cả đã đọc",
+  "notification.empty": "Không có thông báo nào",
+  "notification.typeSystem": "Hệ thống",
+  "notification.typeBudget": "Ngân sách",
+  "notification.typeReminder": "Nhắc nhở"
 };
