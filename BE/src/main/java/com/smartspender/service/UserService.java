@@ -18,6 +18,8 @@ import java.util.stream.Collectors;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final com.smartspender.repository.ChatHistoryRepository chatHistoryRepository;
+    private final com.smartspender.repository.NotificationRepository notificationRepository;
 
     public UserDTO createUser(UserDTO userDTO) {
         log.info("Creating user with email: {}", userDTO.getEmail());
@@ -124,6 +126,9 @@ public class UserService {
             log.error("User not found with id: {}", userId);
             throw new IllegalArgumentException("User not found: " + userId);
         }
+
+        chatHistoryRepository.deleteByUserId(userId);
+        notificationRepository.deleteByUserId(userId);
 
         userRepository.deleteById(userId);
         log.info("User deleted successfully with id: {}", userId);
