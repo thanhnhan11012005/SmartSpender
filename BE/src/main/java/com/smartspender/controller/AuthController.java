@@ -52,4 +52,36 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
+
+    @PostMapping("/google")
+    public ResponseEntity<UserDTO> loginWithGoogle(@Valid @RequestBody com.smartspender.dto.GoogleAuthRequest request) {
+        try {
+            log.info("Google login request received");
+            UserDTO user = authService.loginWithGoogle(request);
+            log.info("Google Login successful for user: {}", user.getId());
+            return ResponseEntity.ok(user);
+        } catch (BadCredentialsException ex) {
+            log.warn("Google Login failed: {}", ex.getMessage());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        } catch (Exception ex) {
+            log.error("Unexpected error during Google login", ex);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @PostMapping("/facebook")
+    public ResponseEntity<UserDTO> loginWithFacebook(@Valid @RequestBody com.smartspender.dto.FacebookAuthRequest request) {
+        try {
+            log.info("Facebook login request received");
+            UserDTO user = authService.loginWithFacebook(request);
+            log.info("Facebook Login successful for user: {}", user.getId());
+            return ResponseEntity.ok(user);
+        } catch (BadCredentialsException ex) {
+            log.warn("Facebook Login failed: {}", ex.getMessage());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        } catch (Exception ex) {
+            log.error("Unexpected error during Facebook login", ex);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
 }
