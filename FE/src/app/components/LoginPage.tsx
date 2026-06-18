@@ -1,4 +1,6 @@
 import React from "react";
+import { useGoogleLogin } from "@react-oauth/google";
+import FacebookLogin from "react-facebook-login/dist/facebook-login-render-props";
 
 export default function LoginPage({
   onSuccess,
@@ -10,6 +12,55 @@ export default function LoginPage({
   const [identifier, setIdentifier] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [loading, setLoading] = React.useState(false);
+
+  const responseFacebook = async (response: any) => {
+    if (response.accessToken) {
+      setLoading(true);
+      try {
+        const res = await fetch("/api/auth/facebook", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ accessToken: response.accessToken }),
+        });
+        if (!res.ok) throw new Error("Lỗi khi xác thực bằng Facebook");
+        const user = await res.json();
+        localStorage.setItem("user", JSON.stringify(user));
+        if (onSuccess) onSuccess();
+        else alert("Đăng nhập Facebook thành công");
+      } catch (err: any) {
+        alert(err.message ?? "Đăng nhập Facebook thất bại");
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      alert("Đăng nhập Facebook bị hủy hoặc thất bại");
+    }
+  };
+
+  const loginGoogle = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      setLoading(true);
+      try {
+        const res = await fetch("/api/auth/google", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ credential: tokenResponse.access_token }),
+        });
+        if (!res.ok) throw new Error("Lỗi khi xác thực bằng Google");
+        const user = await res.json();
+        localStorage.setItem("user", JSON.stringify(user));
+        if (onSuccess) onSuccess();
+        else alert("Đăng nhập Google thành công");
+      } catch (err: any) {
+        alert(err.message ?? "Đăng nhập Google thất bại");
+      } finally {
+        setLoading(false);
+      }
+    },
+    onError: () => {
+      alert("Đăng nhập Google thất bại");
+    }
+  });
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -121,22 +172,26 @@ export default function LoginPage({
             <div className="h-px flex-1 bg-white/20" />
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
-            <button type="button" className="flex h-10 items-center justify-center rounded-xl border border-white/15 bg-white/15 text-white/95 transition hover:bg-white/25">
+          <div className="grid grid-cols-2 gap-3">
+            <button type="button" onClick={() => loginGoogle()} disabled={loading} className="flex h-10 items-center justify-center rounded-xl border border-white/15 bg-white/15 text-white/95 transition hover:bg-white/25 disabled:opacity-60">
               <svg viewBox="0 0 24 24" className="h-4 w-4">
                 <path fill="#EA4335" d="M12 10.2v3.9h5.5c-.2 1.3-1.5 3.8-5.5 3.8-3.3 0-6-2.7-6-6s2.7-6 6-6c1.9 0 3.1.8 3.8 1.5l2.6-2.5C16.8 3.4 14.6 2.5 12 2.5a9.5 9.5 0 1 0 0 19c5.5 0 9.1-3.9 9.1-9.3 0-.6-.1-1.1-.2-2H12z" />
               </svg>
             </button>
-            <button type="button" className="flex h-10 items-center justify-center rounded-xl border border-white/15 bg-white/15 text-white/95 transition hover:bg-white/25">
-              <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor">
-                <path d="M12 .5C5.6.5.5 5.7.5 12.1c0 5.2 3.4 9.6 8.1 11.2.6.1.8-.3.8-.6V20c-3.3.7-4-1.4-4-1.4-.5-1.4-1.3-1.8-1.3-1.8-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1.1 1.9 2.9 1.4 3.6 1.1.1-.8.4-1.4.8-1.8-2.7-.3-5.6-1.4-5.6-6a4.7 4.7 0 0 1 1.2-3.2 4.3 4.3 0 0 1 .1-3.2s1-.3 3.3 1.2a11.3 11.3 0 0 1 6 0c2.3-1.5 3.3-1.2 3.3-1.2.5 1.3.2 2.6.1 3.2a4.7 4.7 0 0 1 1.2 3.2c0 4.7-2.9 5.7-5.7 6 .5.4.9 1.1.9 2.3v3.4c0 .4.2.8.8.6a11.7 11.7 0 0 0 8.1-11.2C23.5 5.7 18.4.5 12 .5z" />
-              </svg>
-            </button>
-            <button type="button" className="flex h-10 items-center justify-center rounded-xl border border-white/15 bg-white/15 text-white/95 transition hover:bg-white/25">
-              <svg viewBox="0 0 24 24" className="h-4 w-4" fill="#1877F2">
-                <path d="M24 12.1C24 5.4 18.6 0 12 0S0 5.4 0 12.1c0 6 4.4 11 10.1 11.9v-8.4H7.1v-3.5h3V9.4c0-3 1.8-4.7 4.6-4.7 1.3 0 2.7.2 2.7.2v3h-1.5c-1.5 0-2 .9-2 1.9v2.3h3.4l-.6 3.5h-2.8V24C19.6 23.1 24 18.1 24 12.1z" />
-              </svg>
-            </button>
+            <FacebookLogin
+              appId="27519853940999018"
+              autoLoad={false}
+              scope="public_profile"
+              fields="name,picture"
+              callback={responseFacebook}
+              render={(renderProps: any) => (
+                <button type="button" onClick={renderProps.onClick} disabled={loading} className="flex h-10 items-center justify-center rounded-xl border border-white/15 bg-white/15 text-white/95 transition hover:bg-white/25 disabled:opacity-60">
+                  <svg viewBox="0 0 24 24" className="h-4 w-4" fill="#1877F2">
+                    <path d="M24 12.1C24 5.4 18.6 0 12 0S0 5.4 0 12.1c0 6 4.4 11 10.1 11.9v-8.4H7.1v-3.5h3V9.4c0-3 1.8-4.7 4.6-4.7 1.3 0 2.7.2 2.7.2v3h-1.5c-1.5 0-2 .9-2 1.9v2.3h3.4l-.6 3.5h-2.8V24C19.6 23.1 24 18.1 24 12.1z" />
+                  </svg>
+                </button>
+              )}
+            />
           </div>
 
           <p className="mt-5 text-center text-[11px] text-white/70">
