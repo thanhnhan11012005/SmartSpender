@@ -47,11 +47,9 @@ spring:
       write-dates-as-timestamps: false
     time-zone: UTC
 
-  # ===== Vertex AI Configuration (NEW - Replaces old Gemini API) =====
-  # Uses Application Default Credentials from C:\Users\{user}\.config\gcloud\application_default_credentials.json
   ai:
     gemini:
-      api-key: API_KEY_PLACEHOLDER # Not needed when using ADC, but can be set for clarity
+      api-key: API_KEY_PLACEHOLDER 
 
 server:
   port: 8080
@@ -70,8 +68,8 @@ logging:
 app:
   jwt:
     secret: your-super-secret-jwt-key-change-this-in-production-environment
-    expiration: 86400000 # 24 hours in milliseconds
-    refresh-expiration: 604800000 # 7 days in milliseconds
+    expiration: 86400000 
+    refresh-expiration: 604800000 
   
   cors:
     allowed-origins: http://localhost:3000,http://localhost:5173
