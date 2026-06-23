@@ -20,6 +20,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final com.smartspender.repository.ChatHistoryRepository chatHistoryRepository;
     private final com.smartspender.repository.NotificationRepository notificationRepository;
+    private final org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
 
     public UserDTO createUser(UserDTO userDTO) {
         log.info("Creating user with email: {}", userDTO.getEmail());
@@ -148,5 +149,29 @@ public class UserService {
                 .weeklyReport(user.getWeeklyReport() != null ? user.getWeeklyReport() : false)
                 .createdAt(user.getCreatedAt() != null ? user.getCreatedAt().toString() : null)
                 .build();
+    }
+    public void changePassword(Long userId, String oldPassword, String newPassword) {
+        log.info("Changing password for user id: {}", userId);
+        
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> {
+                    log.error("User not found with id: {}", userId);
+                    return new IllegalArgumentException("User not found: " + userId);
+                });
+
+        boolean matchesEncoded = false;
+        try {
+            matchesEncoded = passwordEncoder.matches(oldPassword, user.getPasswordHash());
+        } catch (Exception ignored) {
+            matchesEncoded = false;
+        }
+
+        if (!matchesEncoded && !oldPassword.equals(user.getPasswordHash())) {
+            throw new org.springframework.security.authentication.BadCredentialsException("Mật khẩu cũ không chính xác.");
+        }
+
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+        log.info("Password changed successfully for user id: {}", userId);
     }
 }

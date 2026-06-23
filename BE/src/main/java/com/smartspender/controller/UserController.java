@@ -61,4 +61,19 @@ public class UserController {
         userService.deleteUser(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PutMapping("/{id}/password")
+    public ResponseEntity<Void> changePassword(@PathVariable Long id, @Valid @RequestBody com.smartspender.dto.ChangePasswordRequest request) {
+        log.info("PUT /users/{}/password - Changing password", id);
+        try {
+            userService.changePassword(id, request.getOldPassword(), request.getNewPassword());
+            return ResponseEntity.ok().build();
+        } catch (org.springframework.security.authentication.BadCredentialsException ex) {
+            log.warn("Failed to change password: {}", ex.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        } catch (Exception ex) {
+            log.error("Unexpected error changing password", ex);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
 }

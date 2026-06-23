@@ -22,6 +22,7 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService;
 
     public UserDTO register(RegisterRequest request) {
         log.info("Auth register attempt using email={} phone={}", request.getEmail(), request.getPhone());
@@ -234,5 +235,26 @@ public class AuthService {
             log.error("Facebook authentication failed", e);
             throw new BadCredentialsException("Facebook authentication failed");
         }
+    }
+    public void forgotPassword(String email) {
+        log.info("Forgot password request for email: {}", email);
+        Optional<User> userOpt = userRepository.findByEmail(email);
+        if (userOpt.isEmpty()) {
+            // Return silently to prevent email enumeration
+            return;
+        }
+
+        User user = userOpt.get();
+        String tempPassword = java.util.UUID.randomUUID().toString().substring(0, 8);
+        user.setPasswordHash(passwordEncoder.encode(tempPassword));
+        userRepository.save(user);
+
+        String htmlBody = "<h2>Yêu cầu đặt lại mật khẩu</h2>"
+                + "<p>Xin chào " + (user.getName() != null ? user.getName() : "bạn") + ",</p>"
+                + "<p>Mật khẩu tạm thời của bạn là: <strong style='font-size:18px; color:#1d6fd8;'>" + tempPassword + "</strong></p>"
+                + "<p>Vui lòng đăng nhập bằng mật khẩu này. Bạn có thể đổi lại mật khẩu mới sau đó.</p>"
+                + "<br/><p>Trân trọng,<br/>Đội ngũ SmartSpender</p>";
+
+        emailService.sendHtmlEmail(user.getEmail(), "SmartSpender - Mật khẩu mới của bạn", htmlBody);
     }
 }

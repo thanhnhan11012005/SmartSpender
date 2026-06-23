@@ -84,4 +84,15 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
+    @PostMapping("/forgot-password")
+    public ResponseEntity<Void> forgotPassword(@Valid @RequestBody com.smartspender.dto.ForgotPasswordRequest request) {
+        try {
+            log.info("Forgot password request received for: {}", request.getEmail());
+            authService.forgotPassword(request.getEmail());
+            return ResponseEntity.ok().build();
+        } catch (Exception ex) {
+            log.error("Unexpected error during forgot password", ex);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
 }
