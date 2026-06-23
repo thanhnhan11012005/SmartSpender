@@ -48,8 +48,8 @@ spring:
     time-zone: UTC
 
   ai:
-  gemini:
-    api-key: ${GEMINI_API_KEY}
+    gemini:
+      api-key: ${GEMINI_API_KEY:}
 
 server:
   port: 8080

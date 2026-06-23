@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import imgAvatarByewind from "../../imports/Sidebar/5d1e58c8086fe7ad86b64a6151f47a2a2aa8357a.png";
 import { useTranslation } from "../../hooks/useTranslation";
+import { Eye, EyeOff } from "lucide-react";
 
-type SettingsTab = "profile" | "preferences" | "notifications" | "data";
+type SettingsTab = "profile" | "preferences" | "notifications" | "data" | "security";
 
 const generateTimePeriods = () => {
   const periods = [{ value: "all", label: "Tất cả dữ liệu" }];
@@ -49,6 +50,15 @@ export default function SettingsPage() {
     const month = String(d.getMonth() + 1).padStart(2, "0");
     return `${d.getFullYear()}-${month}`;
   });
+
+  const [oldPassword, setOldPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showOldPassword, setShowOldPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [passwordMessage, setPasswordMessage] = useState<{type: "success" | "error", text: string} | null>(null);
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -107,6 +117,7 @@ export default function SettingsPage() {
       { key: "preferences" as const, label: t("settings.preferences") },
       { key: "notifications" as const, label: t("settings.notifications") },
       { key: "data" as const, label: t("settings.data") },
+      { key: "security" as const, label: "Đổi mật khẩu" },
     ],
     [t]
   );
@@ -253,6 +264,48 @@ export default function SettingsPage() {
     }
   };
 
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newPassword !== confirmPassword) {
+      setPasswordMessage({ type: "error", text: "Mật khẩu mới không khớp!" });
+      return;
+    }
+    if (newPassword.length < 6) {
+      setPasswordMessage({ type: "error", text: "Mật khẩu mới phải có ít nhất 6 ký tự!" });
+      return;
+    }
+    setChangingPassword(true);
+    setPasswordMessage(null);
+    try {
+      const rawUser = localStorage.getItem("user");
+      if (!rawUser) throw new Error("Vui lòng đăng nhập lại.");
+      const currentUser = JSON.parse(rawUser);
+      const userId = currentUser.id;
+
+      const response = await fetch(`/api/users/${userId}/password`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ oldPassword, newPassword }),
+      });
+
+      if (!response.ok) {
+        if (response.status === 400 || response.status === 401) {
+          throw new Error("Mật khẩu cũ không chính xác.");
+        }
+        throw new Error("Không thể đổi mật khẩu lúc này.");
+      }
+
+      setPasswordMessage({ type: "success", text: "Đổi mật khẩu thành công!" });
+      setOldPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (error: any) {
+      setPasswordMessage({ type: "error", text: error.message });
+    } finally {
+      setChangingPassword(false);
+    }
+  };
+
   const Toggle = ({ enabled, onChange }: { enabled: boolean; onChange: (value: boolean) => void }) => (
     <button
       type="button"
@@ -347,6 +400,7 @@ export default function SettingsPage() {
                   </div>
                 </div>
               </div>
+
             </div>
           )}
 
@@ -485,6 +539,83 @@ export default function SettingsPage() {
                     {t("settings.data.deleteAccount")}
                   </button>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === "security" && (
+            <div className="space-y-6">
+              <div>
+                <h1 className="text-2xl font-bold text-black">Đổi mật khẩu</h1>
+                <p className="mt-1 text-sm text-[rgba(0,0,0,0.55)]">Bảo mật tài khoản của bạn bằng một mật khẩu mạnh.</p>
+              </div>
+
+              {passwordMessage && (
+                <div className={`mb-6 rounded-xl px-4 py-3 text-sm ${passwordMessage.type === "success" ? "border border-green-200 bg-green-50 text-green-700" : "border border-red-200 bg-red-50 text-red-700"}`}>
+                  {passwordMessage.text}
+                </div>
+              )}
+
+              <div className="rounded-2xl border border-[rgba(0,0,0,0.08)] bg-[rgba(0,0,0,0.01)] p-6 sm:p-8">
+                <form onSubmit={handleChangePassword} className="grid max-w-2xl gap-5">
+                  <div className="grid gap-2 sm:grid-cols-[200px_1fr] sm:items-center">
+                    <label className="text-sm font-medium text-[rgba(0,0,0,0.72)]">Mật khẩu hiện tại</label>
+                    <div className="relative">
+                      <input
+                        type={showOldPassword ? "text" : "password"}
+                        required
+                        value={oldPassword}
+                        onChange={(e) => setOldPassword(e.target.value)}
+                        className="h-12 w-full rounded-xl border border-[rgba(0,0,0,0.08)] bg-white px-4 pr-10 text-[14px] outline-none transition-colors focus:border-[#8b5cf6]"
+                      />
+                      <button type="button" onClick={() => setShowOldPassword(!showOldPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[rgba(0,0,0,0.4)] transition hover:text-[rgba(0,0,0,0.7)]">
+                        {showOldPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-2 sm:grid-cols-[200px_1fr] sm:items-center">
+                    <label className="text-sm font-medium text-[rgba(0,0,0,0.72)]">Mật khẩu mới</label>
+                    <div className="relative">
+                      <input
+                        type={showNewPassword ? "text" : "password"}
+                        required
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        className="h-12 w-full rounded-xl border border-[rgba(0,0,0,0.08)] bg-white px-4 pr-10 text-[14px] outline-none transition-colors focus:border-[#8b5cf6]"
+                      />
+                      <button type="button" onClick={() => setShowNewPassword(!showNewPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[rgba(0,0,0,0.4)] transition hover:text-[rgba(0,0,0,0.7)]">
+                        {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-2 sm:grid-cols-[200px_1fr] sm:items-center">
+                    <label className="text-sm font-medium text-[rgba(0,0,0,0.72)]">Xác nhận mật khẩu mới</label>
+                    <div className="relative">
+                      <input
+                        type={showConfirmPassword ? "text" : "password"}
+                        required
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        className="h-12 w-full rounded-xl border border-[rgba(0,0,0,0.08)] bg-white px-4 pr-10 text-[14px] outline-none transition-colors focus:border-[#8b5cf6]"
+                      />
+                      <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[rgba(0,0,0,0.4)] transition hover:text-[rgba(0,0,0,0.7)]">
+                        {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="mt-2 flex justify-end border-t border-[rgba(0,0,0,0.06)] pt-5">
+                    <button
+                      type="submit"
+                      disabled={changingPassword}
+                      className="rounded-xl bg-[#8b5cf6] px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#7c3aed] disabled:opacity-60"
+                    >
+                      {changingPassword ? "Đang cập nhật..." : "Cập nhật mật khẩu"}
+                    </button>
+                  </div>
+                </form>
               </div>
             </div>
           )}

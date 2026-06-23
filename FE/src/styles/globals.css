@@ -44,3 +44,9 @@
     overflow-x: hidden;
   }
 }
+
+/* Hide native password reveal icon in Edge/IE */
+input::-ms-reveal,
+input::-ms-clear {
+  display: none;
+}
